@@ -1,0 +1,112 @@
+---
+title: "tgp_data_processing"
+author: "Annie Xie"
+date: "2025-10-06"
+output: 
+  workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+# Introduction
+
+In this analysis, I record the process of how I prepared the 1000 Genomes Project data.
+
+To prepare the data, I started with the ADMIXTURE analysis dataset from the flagship paper, [1000 Genomes Project Consortium et al. 2015][tgp_phase3_paper]; the data can be found [here][tgp_admixture_data]. This dataset contains genotype information for 2,504 individuals from 26 populations and 193,634 SNPs. The paper states that in the preparation of this dataset, variants with a minor allele frequency of less than 0.05 were filtered out and the genome was thinned to decrease the effect of linkage disequilibrium.
+
+I then filtered out SNPs for which we had no ancestral allele information; ancestral allele information was obtained from the "2016-05-05 primary release (build 37, 2504 samples)" files downloaded from [here][ancestral_allele_info]. This reduced the number of SNPs to 185,116. We then re-coded the data matrix to be counts of derived alleles. From the individual by SNP data matrix $X$, we computed the scaled Gram matrix, $S = \frac{1}{p}XX'$ where $p$ is the number of SNPs.
+
+# Plink2 commands to convert files
+
+This is code to make the pgen, psam, and pvar files from the ped and map files for the 1000 Genomes Project data:
+`plink2 --pedmap ALL.wgs.phase3_shapeit2_filtered.20141217.maf0.05 --make-pgen --out ALL.wgs.phase3_shapeit2_filtered.20141217.maf0.05` 
+
+This is code to make the bed, bim, and fam files from the ped and map files for the 1000 Genomes Project data:
+`plink2 --pedmap ALL.wgs.phase3_shapeit2_filtered.20141217.maf0.05 --make-bed --out tgp_admixture_data`
+
+This is code to decompress the pgen.zst file for the ancestral allele information:
+`plink2 --zst-decompress all_phase3_ns.pgen.zst > all_phase3_ns.pgen`
+
+This is code to make pgen, psam, and pvar files for the ancestral allele information:
+`plink2 --pfile 'vzs' all_phase3_ns --snps-only --maf 0.05 --make-pgen --out all_phase3_ns_maf0.05`
+
+# Obtaining the ancestral allele information
+
+```{r, eval = FALSE}
+# edited from code obtained from github repo joonsukkang/drift
+library(tidyverse)
+
+# load in ancestral allele information
+all_phase3_ns_maf0_05_pvar <- read_delim("all_phase3_ns_maf0.05.pvar", 
+                                         delim = "\t", escape_double = FALSE, 
+                                         trim_ws = TRUE, skip = 189)
+INFO <- all_phase3_ns_maf0_05_pvar$INFO
+loc <- gregexpr(patter='AA=', INFO)
+AA <- substr(INFO, unlist(loc)+3, unlist(loc)+3)
+
+# create data frame with ancestral allele as a column
+df.out <- all_phase3_ns_maf0_05_pvar %>%
+  select(-QUAL, -FILTER, -INFO) %>%
+  cbind(data.frame(AA=AA))
+
+colnames(df.out)[1] <-'CHROM'
+df.out <- df.out %>%
+  mutate(ID2 = paste0(CHROM, ':',POS))
+
+# load in 1000 Genomes Project data from the bim file
+df2 <- genio::read_bim('tgp_admixture_data.bim')
+
+df2 <- df2 %>%
+  select(id, ref, alt) %>%
+  rename(ID2 = id, REF2 = ref, ALT2 = alt)
+  
+# create data fame containing ancestra allele information for SNPs in the 1000 Genomes Project data
+df.out2 <- df2 %>%left_join(df.out, by='ID2')
+
+# code to save the data
+# saveRDS(df.out2, 'AA.rds')
+```
+
+# Recoding the 1000 Genomes Project data
+
+```{r, eval = FALSE}
+# edited from code obtained from github repo joonsukkang/drift
+
+# load in 1000 Genomes Project plink data
+tgp_data <- genio::read_plink('tgp_admixture_data')
+
+# load in ancestral allele information
+AA_mat <- readRDS('AA.rds')
+
+# clean ancestral allele information
+AA <- AA_mat$AA
+AA[AA=='-'| AA=='.' | AA=='N'] <- NA
+AA[AA=='a'] <- 'A'
+AA[AA=='c'] <- 'C'
+AA[AA=='g'] <- 'G'
+AA[AA=='t'] <- 'T'
+
+# recode genotype matrix
+idx.flip <- AA==tgp_data$bim$alt; idx.flip[is.na(idx.flip)] <- FALSE
+idx.na <- is.na(AA)
+
+G0 <- tgp_data$X
+G <- G0
+G[idx.flip,] <- 2-G0[idx.flip,]
+G <- G[!idx.na,]
+
+rm(G0)
+
+# computation of scaled Gram matrix
+tgp_covmat <- crossprod(G)/nrow(G)
+
+# code to save the data
+# saveRDS(G, 'tgp_data_matrix.rds')
+# saveRDS(tgp_covmat, 'tgp_cov_matrix.rds')
+```
+
+[tgp_phase3_paper]: https://www.nature.com/articles/nature15393
+
+[tgp_admixture_data]: https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/admixture_files/
+
+[ancestral_allele_info]: https://www.cog-genomics.org/plink/2.0/resources#phase3_1kg
