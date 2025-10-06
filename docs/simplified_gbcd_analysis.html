@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Annie Xie" />
+
+<meta name="date" content="2025-10-05" />
+
+<title>simplified_gbcd_analysis</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">tgp_analysis</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/xxie6/tgp_analysis">
+    <span class="fab fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">simplified_gbcd_analysis</h1>
+<h4 class="author">Annie Xie</h4>
+<h4 class="date">2025-10-05</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2025-10-06
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>tgp_analysis/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20251005code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20251005)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20251005code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20251005)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomxxie6tgpanalysistreec9fef87b1299f2d4af523315853fc0d10cf36fa0targetblankc9fef87a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/xxie6/tgp_analysis/tree/c9fef87b1299f2d4af523315853fc0d10cf36fa0" target="_blank">c9fef87</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomxxie6tgpanalysistreec9fef87b1299f2d4af523315853fc0d10cf36fa0targetblankc9fef87a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/xxie6/tgp_analysis/tree/c9fef87b1299f2d4af523315853fc0d10cf36fa0" target="_blank">c9fef87</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown
+(<code>analysis/simplified_gbcd_analysis.Rmd</code>) and HTML
+(<code>docs/simplified_gbcd_analysis.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/xxie6/tgp_analysis/blob/c9fef87b1299f2d4af523315853fc0d10cf36fa0/analysis/simplified_gbcd_analysis.Rmd" target="_blank">c9fef87</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2025-10-06
+</td>
+<td>
+Add simplified gbcd analysis
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<p>The aim of this vignette is to illustrate how to use
+<code>flashier</code> to obtain a decomposition of the 1000 Genomes
+Phase 3 dataset.</p>
+<p>We begin by loading the necessary packages. We also set the seed so
+that results can be fully reproduced.</p>
+<pre class="r"><code>library(flashier)
+library(ashr)
+library(ebnm)
+library(Matrix)
+library(pheatmap)
+library(ggplot2)
+library(fastTopics)
+library(cowplot)
+set.seed(3)</code></pre>
+<div id="preparing-the-data" class="section level1">
+<h1>Preparing the Data</h1>
+<p>In this vignette, we will be working with the 1000 Genomes Project
+Phase 3 dataset. We started with the ADMIXTURE analysis dataset from the
+flagship paper, <a
+href="https://www.nature.com/articles/nature15393">1000 Genomes Project
+Consortium et al. 2015</a>; the data can be found <a
+href="https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/admixture_files/">here</a>.
+This dataset contains genotype information for 2,504 individuals from 26
+populations and 193,634 SNPs. The paper states that in the preparation
+of this dataset, variants with a minor allele frequency of less than
+0.05 were filtered out and the genome was thinned to decrease the effect
+of linkage disequilibrium.</p>
+<p>Furthermore, we filtered out SNPs for which we had no ancestral
+allele information; ancestral allele information was obtained from the
+“2016-05-05 primary release (build 37, 2504 samples)” files downloaded
+from <a
+href="https://www.cog-genomics.org/plink/2.0/resources#phase3_1kg">here</a>.
+This reduced the number of SNPs to 185,116. We then re-coded the data
+matrix to be counts of derived alleles. From the individual by SNP data
+matrix <span class="math inline">\(X\)</span>, we computed the scaled
+Gram matrix, <span class="math inline">\(S = \frac{1}{p}XX&#39;\)</span>
+where <span class="math inline">\(p\)</span> is the number of SNPs.</p>
+<p>We load in the scaled Gram matrix.</p>
+<pre class="r"><code>S &lt;- readRDS(&#39;data/tgp_cov_matrix.rds&#39;)</code></pre>
+<p>We also load in the meta data which contains population information
+for each sample.</p>
+<pre class="r"><code>tgp_meta &lt;- readRDS(&#39;data/tgp_meta.rds&#39;)</code></pre>
+<p>The samples come from 26 populations, which are grouped into 5
+super-populations.</p>
+<pre class="r"><code>summary(tgp_meta$pop)</code></pre>
+<pre><code>GWD MSL YRI ESN LWK ACB ASW TSI IBS GBR CEU FIN PJL GIH ITU STU BEB CDX KHV CHS 
+113  85 108  99  99  96  61 107 107  91  99  99  96 103 102 102  86  93  99 105 
+CHB JPT PUR CLM MXL PEL 
+103 104 104  94  64  85 </code></pre>
+<pre class="r"><code>summary(tgp_meta$super_pop)</code></pre>
+<pre><code>   Length     Class      Mode 
+     2504 character character </code></pre>
+</div>
+<div id="using-flashier-to-fit-gbcd" class="section level1">
+<h1>Using Flashier to fit GBCD</h1>
+<p>We also want to note that this <code>fit_gbcd</code> call takes about
+1 hour to complete.</p>
+<p>Now, we use the R package <code>flashier</code> to apply a simplified
+version of GBCD on the 1000 Genomes Project data. This is broken down
+into several steps.</p>
+<p>Step 1: Fit a point-Laplace EBMF fit to the scaled Gram matrix</p>
+<pre class="r"><code>tgp_cov_fit &lt;- flash_init(data = S) |&gt;
+  flash_greedy(Kmax = 11, ebnm_fn = ebnm::ebnm_point_laplace) |&gt;
+  flash_backfit()</code></pre>
+<pre><code>Adding factor 1 to flash object...
+Adding factor 2 to flash object...
+Adding factor 3 to flash object...
+Adding factor 4 to flash object...
+Adding factor 5 to flash object...
+Adding factor 6 to flash object...
+Adding factor 7 to flash object...
+Adding factor 8 to flash object...
+Adding factor 9 to flash object...
+Adding factor 10 to flash object...
+Adding factor 11 to flash object...
+Wrapping up...
+Done.
+Backfitting 11 factors (tolerance: 9.34e-02)...
+  Difference between iterations is within 1.0e+04...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+  Difference between iterations is within 1.0e-01...
+Wrapping up...
+Done.</code></pre>
+<p>Note that <code>Kmax = 11</code> forces this initialization step to
+fit no more than 6 factors. However, it is possible for the final fit to
+have more than 11 factors (The number of factors in the final fit will
+be no more than 2*<code>Kmax</code>). It is recommended to set
+<code>Kmax</code> to a larger value rather than a smaller one.</p>
+<p>Step 2: Split the factors into positive and negative components and
+refit the weights</p>
+<pre class="r"><code>split_pt_laplace_estimates &lt;- function(cov_fit){
+  # S is the scaled Gram matrix
+  # cov_fit is a flash object
+  
+  LL &lt;- cov_fit$L_pm
+  FF &lt;- cov_fit$F_pm
+  
+# split into positive and negative components
+  LL &lt;- cbind(pmax(LL, 0), pmax(-LL, 0))
+  FF &lt;- cbind(pmax(FF, 0), pmax(-FF, 0))
+  
+  # remove columns of zeros
+  LL.idx.nonzero &lt;- apply(LL, 2, function(x){return(sum(x^2))}) &gt; 10^(-10)
+  FF.idx.nonzero &lt;- apply(FF, 2, function(x){return(sum(x^2))}) &gt; 10^(-10)
+  LL &lt;- LL[, LL.idx.nonzero]
+  FF &lt;- FF[, FF.idx.nonzero]
+  
+  # refit weights by least squares
+  # n &lt;- nrow(S)
+  # lft_vec &lt;- matrix(rep(0, ncol(LL)*n*n), ncol = ncol(LL))
+  # for (i in 1:ncol(LL)){
+  #   lft_vec[,i] &lt;- c(LL[,i]%*%t(FF[,i]))
+  # }
+  # 
+  # nnlm_fit &lt;- NNLM::nnlm(lft_vec, as.matrix(c(S), ncol = 1), alpha = c(0,0,0))
+  # 
+  # indices_keep &lt;- (nnlm_fit$coefficients &gt; 0)
+  # LL_scaled &lt;- LL[,indices_keep] %*% diag(sqrt(nnlm_fit$coefficients[indices_keep]))
+  # FF_scaled &lt;- FF[,indices_keep] %*% diag(sqrt(nnlm_fit$coefficients[indices_keep]))
+  return(list(LL, FF))
+}</code></pre>
+<pre class="r"><code>pt_laplace_split_initialization &lt;- split_pt_laplace_estimates(tgp_cov_fit)</code></pre>
+<p>Step 3: Fit a generalized-binary EBMF fit to the scaled Gram
+matrix</p>
+<pre class="r"><code>tgp_cov_fit &lt;- flash_init(data = S) |&gt;
+  flash_factors_init(pt_laplace_split_initialization, ebnm_fn = ebnm::ebnm_generalized_binary) |&gt;
+  flash_backfit()</code></pre>
+<pre><code>Backfitting 21 factors (tolerance: 9.34e-02)...
+  Difference between iterations is within 1.0e+06...
+  Difference between iterations is within 1.0e+05...
+  --Estimate of factor 18 is numerically zero!
+  --Estimate of factor 19 is numerically zero!
+  --Estimate of factor 20 is numerically zero!
+  --Estimate of factor 21 is numerically zero!
+  --Estimate of factor 9 is numerically zero!
+  --Estimate of factor 10 is numerically zero!
+  --Estimate of factor 11 is numerically zero!
+  --Estimate of factor 12 is numerically zero!
+  --Estimate of factor 13 is numerically zero!
+  --Estimate of factor 14 is numerically zero!
+  --Estimate of factor 15 is numerically zero!
+  --Estimate of factor 16 is numerically zero!
+  --Estimate of factor 17 is numerically zero!
+  --Estimate of factor 18 is numerically zero!
+  --Estimate of factor 19 is numerically zero!
+  --Estimate of factor 20 is numerically zero!
+  --Estimate of factor 21 is numerically zero!
+  Difference between iterations is within 1.0e+04...
+  Difference between iterations is within 1.0e+03...
+  Difference between iterations is within 1.0e+02...
+  Difference between iterations is within 1.0e+01...
+  Difference between iterations is within 1.0e+00...
+Wrapping up...
+Done.</code></pre>
+<pre class="r"><code>tgp_cov_fit_scaled &lt;- ldf(tgp_cov_fit, &#39;i&#39;)</code></pre>
+<p>Note that <code>prior = ebnm_generalized_binary</code> forces <span
+class="math inline">\(L\)</span> to be non-negative. So this generates a
+non-negative covariance matrix decomposition.</p>
+<p>Step 4: Filter factors that are not similar across both estimates</p>
+<pre class="r"><code>tgp_cov_fit_scaled_L &lt;- tgp_cov_fit_scaled$L %*% diag(sqrt(tgp_cov_fit_scaled$D))
+tgp_cov_fit_scaled_F &lt;- tgp_cov_fit_scaled$F %*% diag(sqrt(tgp_cov_fit_scaled$D))</code></pre>
+<pre class="r"><code># compute correlations
+factor_correlations &lt;- diag(cor(tgp_cov_fit_scaled_L, tgp_cov_fit_scaled_F))
+factor_keep &lt;- factor_correlations &gt; 0.8</code></pre>
+<pre class="r"><code>tgp_cov_fit_filtered_scaled_L &lt;- tgp_cov_fit_scaled_L[, factor_keep]</code></pre>
+</div>
+<div id="visualizing-the-results" class="section level1">
+<h1>Visualizing the Results</h1>
+<p>A useful plot type for visualizing non-negative loadings matrices is
+the “structure plot” – a stacked bar plot in which each component is
+represented as a bar of a different color, and the bar heights are given
+by the loadings on each component.</p>
+<p>This is the structure plot for the loadings estimate from gbcd:</p>
+<pre class="r"><code>factor_colors &lt;- Polychrome::kelly.colors(ncol(tgp_cov_fit_filtered_scaled_L)+1)[-1]
+
+L &lt;- tgp_cov_fit_filtered_scaled_L
+k &lt;- ncol(L)
+colnames(L) &lt;- paste0(&quot;k&quot;,1:k)
+p1 &lt;- structure_plot(L,grouping = tgp_meta$pop,
+                     colors = factor_colors,
+                     gap = 16,verbose = FALSE) +
+  labs(y = &quot;membership&quot;,title = &quot;GBCD&quot;)</code></pre>
+<pre><code>Running tsne on 86 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 70 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 94 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 80 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 77 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 67 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 47 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 86 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 90 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 73 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 79 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 86 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 75 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 81 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 77 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 75 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 69 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 76 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 75 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 81 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 88 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 83 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 89 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 77 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 52 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 67 x 12 matrix.</code></pre>
+<pre><code>Warning: `aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette(&quot;ggplot2-in-packages&quot;)` for more information.
+ℹ The deprecated feature was likely used in the fastTopics package.
+  Please report the issue at
+  &lt;https://github.com/stephenslab/fastTopics/issues&gt;.
+This warning is displayed once every 8 hours.
+Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+generated.</code></pre>
+<pre class="r"><code>p1</code></pre>
+<p><img src="figure/simplified_gbcd_analysis.Rmd/structure_plot_L-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Factor 1 (“k1” in the legend) appears to be a “baseline” factor. To
+focus on differences between samples, we can remove first factor from
+our structure plot:</p>
+<pre class="r"><code>p2 &lt;- structure_plot(L[,-1],grouping = tgp_meta$pop,
+                     colors = factor_colors[-1],
+                     gap = 16,verbose = FALSE) +
+  labs(y = &quot;membership&quot;,title = &quot;GBCD&quot;)</code></pre>
+<pre><code>Running tsne on 95 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 65 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 84 x 11 matrix.
+Running tsne on 84 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 83 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 77 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 44 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 83 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 85 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 75 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 85 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 82 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 70 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 81 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 80 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 75 x 11 matrix.
+Running tsne on 75 x 11 matrix.
+Running tsne on 75 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 80 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 82 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 81 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 84 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 77 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 81 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 51 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 66 x 11 matrix.</code></pre>
+<pre class="r"><code>p2</code></pre>
+<p><img src="figure/simplified_gbcd_analysis.Rmd/structure_plot_wout_k1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>From this plot, we can interpret the components of our decomposition.
+For example, factors 2, 6, and 7 (“k2”, “k6”, and “k7” in the plot)
+primarily capture the Africa super-population, East Asia
+super-population, and South Asian super-population, respectively. Other
+factors highlight components shared across super-populations. For
+example, factor 4 has some activity in both the East Asia and South Asia
+super-populations.</p>
+<p>The results also highlight interesting compositions for particular
+populations. For example, if we take a closer look at Japan (JPT), we
+see that most of the components match up with those of the other East
+Asian populations. However, Japan has an additional component, factor 9,
+which differentiates it from the other East Asian populations. Another
+example is Finland (FIN). Finland contains one component, factor 3,
+which is shared with other European populations. Additionally, it
+contains a unique component, factor 10. Another interesting example is
+Peru (PEL). Peru contains one component, factor 8, which primarily
+corresponds to the Americas super-population. However, it also contains
+other components, factors 4 and 6, which are shared with South Asian
+and/or East Asian populations. Furthermore, it contains a component,
+factor 3, that is shared with Europe and other populations in the
+Americas super-population.</p>
+<p>Interpretations of others factors: factor 5 implies a shared
+component between two African populations, Mende in Sierra Leone and
+Gambian in Western Division - Mandinka. Factor 12 corresponds to a
+unique component for the Luhya people of Webuye, Kenya. Factor 11 does
+not have a clear interpretation as it is very sparse and seems to only
+correspond to particular individuals in a population.</p>
+</div>
+<div id="session-info" class="section level1">
+<h1>Session Info</h1>
+<p>This is the version of R and the packages that were used to generate
+these results.</p>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.5.1 (2025-06-13)
+Platform: aarch64-apple-darwin20
+Running under: macOS Sequoia 15.6
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Chicago
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] cowplot_1.2.0      fastTopics_0.6-192 ggplot2_4.0.0      pheatmap_1.0.13   
+[5] Matrix_1.7-3       ashr_2.2-67        flashier_1.0.56    ebnm_1.1-38       
+[9] workflowr_1.7.2   
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_1.2.1      viridisLite_0.4.2     dplyr_1.1.4          
+ [4] farver_2.1.2          S7_0.2.0              fastmap_1.2.0        
+ [7] lazyeval_0.2.2        promises_1.3.3        digest_0.6.37        
+[10] lifecycle_1.0.4       processx_3.8.6        invgamma_1.2         
+[13] magrittr_2.0.4        compiler_4.5.1        rlang_1.1.6          
+[16] sass_0.4.10           progress_1.2.3        tools_4.5.1          
+[19] yaml_2.3.10           data.table_1.17.8     knitr_1.50           
+[22] labeling_0.4.3        prettyunits_1.2.0     htmlwidgets_1.6.4    
+[25] scatterplot3d_0.3-44  RColorBrewer_1.1-3    Rtsne_0.17           
+[28] withr_3.0.2           purrr_1.1.0           grid_4.5.1           
+[31] git2r_0.36.2          colorspace_2.1-2      scales_1.4.0         
+[34] gtools_3.9.5          cli_3.6.5             rmarkdown_2.30       
+[37] crayon_1.5.3          generics_0.1.4        RcppParallel_5.1.11-1
+[40] rstudioapi_0.17.1     httr_1.4.7            pbapply_1.7-4        
+[43] cachem_1.1.0          stringr_1.5.2         splines_4.5.1        
+[46] parallel_4.5.1        softImpute_1.4-3      vctrs_0.6.5          
+[49] jsonlite_2.0.0        callr_3.7.6           hms_1.1.3            
+[52] mixsqp_0.3-54         ggrepel_0.9.6         irlba_2.3.5.1        
+[55] horseshoe_0.2.0       trust_0.1-8           plotly_4.11.0        
+[58] jquerylib_0.1.4       tidyr_1.3.1           glue_1.8.0           
+[61] ps_1.9.1              uwot_0.2.3            stringi_1.8.7        
+[64] Polychrome_1.5.4      gtable_0.3.6          later_1.4.4          
+[67] quadprog_1.5-8        tibble_3.3.0          pillar_1.11.1        
+[70] htmltools_0.5.8.1     truncnorm_1.0-9       R6_2.6.1             
+[73] rprojroot_2.1.1       evaluate_1.0.5        lattice_0.22-7       
+[76] RhpcBLASctl_0.23-42   SQUAREM_2021.1        httpuv_1.6.16        
+[79] bslib_0.9.0           Rcpp_1.1.0            deconvolveR_1.2-1    
+[82] whisker_0.4.1         xfun_0.53             fs_1.6.6             
+[85] getPass_0.2-4         pkgconfig_2.0.3      </code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.5.1 (2025-06-13)
+Platform: aarch64-apple-darwin20
+Running under: macOS Sequoia 15.6
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Chicago
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] cowplot_1.2.0      fastTopics_0.6-192 ggplot2_4.0.0      pheatmap_1.0.13   
+[5] Matrix_1.7-3       ashr_2.2-67        flashier_1.0.56    ebnm_1.1-38       
+[9] workflowr_1.7.2   
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_1.2.1      viridisLite_0.4.2     dplyr_1.1.4          
+ [4] farver_2.1.2          S7_0.2.0              fastmap_1.2.0        
+ [7] lazyeval_0.2.2        promises_1.3.3        digest_0.6.37        
+[10] lifecycle_1.0.4       processx_3.8.6        invgamma_1.2         
+[13] magrittr_2.0.4        compiler_4.5.1        rlang_1.1.6          
+[16] sass_0.4.10           progress_1.2.3        tools_4.5.1          
+[19] yaml_2.3.10           data.table_1.17.8     knitr_1.50           
+[22] labeling_0.4.3        prettyunits_1.2.0     htmlwidgets_1.6.4    
+[25] scatterplot3d_0.3-44  RColorBrewer_1.1-3    Rtsne_0.17           
+[28] withr_3.0.2           purrr_1.1.0           grid_4.5.1           
+[31] git2r_0.36.2          colorspace_2.1-2      scales_1.4.0         
+[34] gtools_3.9.5          cli_3.6.5             rmarkdown_2.30       
+[37] crayon_1.5.3          generics_0.1.4        RcppParallel_5.1.11-1
+[40] rstudioapi_0.17.1     httr_1.4.7            pbapply_1.7-4        
+[43] cachem_1.1.0          stringr_1.5.2         splines_4.5.1        
+[46] parallel_4.5.1        softImpute_1.4-3      vctrs_0.6.5          
+[49] jsonlite_2.0.0        callr_3.7.6           hms_1.1.3            
+[52] mixsqp_0.3-54         ggrepel_0.9.6         irlba_2.3.5.1        
+[55] horseshoe_0.2.0       trust_0.1-8           plotly_4.11.0        
+[58] jquerylib_0.1.4       tidyr_1.3.1           glue_1.8.0           
+[61] ps_1.9.1              uwot_0.2.3            stringi_1.8.7        
+[64] Polychrome_1.5.4      gtable_0.3.6          later_1.4.4          
+[67] quadprog_1.5-8        tibble_3.3.0          pillar_1.11.1        
+[70] htmltools_0.5.8.1     truncnorm_1.0-9       R6_2.6.1             
+[73] rprojroot_2.1.1       evaluate_1.0.5        lattice_0.22-7       
+[76] RhpcBLASctl_0.23-42   SQUAREM_2021.1        httpuv_1.6.16        
+[79] bslib_0.9.0           Rcpp_1.1.0            deconvolveR_1.2-1    
+[82] whisker_0.4.1         xfun_0.53             fs_1.6.6             
+[85] getPass_0.2-4         pkgconfig_2.0.3      </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
