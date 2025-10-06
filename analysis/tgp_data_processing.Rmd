@@ -30,6 +30,32 @@ This is code to decompress the pgen.zst file for the ancestral allele informatio
 This is code to make pgen, psam, and pvar files for the ancestral allele information:
 `plink2 --pfile 'vzs' all_phase3_ns --snps-only --maf 0.05 --make-pgen --out all_phase3_ns_maf0.05`
 
+# Obtaining the meta data
+```{r, eval = FALSE}
+library(dplyr)
+
+# extract meta data from kgp package
+tgp_meta <- kgp::kgp3
+tgp_meta <- tgp_meta %>%
+  select(sample = id, gender = sexf, pop = pop, super_pop = reg)
+
+tgp_meta$pop <- factor(tgp_meta$pop, levels=c("GWD","MSL","YRI","ESN","LWK",
+                            "ACB","ASW",
+                            "TSI","IBS","GBR","CEU","FIN","PJL","GIH",
+                            "ITU","STU","BEB",
+                            "CDX","KHV","CHS","CHB","JPT",
+                            "PUR","CLM","MXL","PEL"))
+
+# reorder to match the ordering of samples in 1000 Genomes Project data
+tgp_fam_data_id <- genio::read_fam('tgp_admixture_data.fam')$id
+
+tgp_meta <- tgp_meta %>%
+  arrange(match(sample, tgp_fam_data_id))
+
+# code to save the data
+# saveRDS(tgp_meta, 'tgp_meta.rds')
+```
+
 # Obtaining the ancestral allele information
 
 ```{r, eval = FALSE}
