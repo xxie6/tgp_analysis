@@ -1,0 +1,182 @@
+---
+title: "simplified_gbcd_analysis"
+author: "Annie Xie"
+date: "2025-10-05"
+output: 
+  workflowr::wflow_html:
+    code_folding: hide
+editor_options:
+  chunk_output_type: console
+---
+
+The aim of this vignette is to illustrate how to use `flashier` to obtain a decomposition of the 1000 Genomes Phase 3 dataset.
+
+We begin by loading the necessary packages. We also set the seed so that results can be fully reproduced.    
+```{r load_packages, message = FALSE, warning = FALSE}
+library(flashier)
+library(ashr)
+library(ebnm)
+library(Matrix)
+library(pheatmap)
+library(ggplot2)
+library(fastTopics)
+library(cowplot)
+set.seed(3)
+```
+
+# Preparing the Data
+In this vignette, we will be working with the 1000 Genomes Project Phase 3 dataset. We started with the ADMIXTURE analysis dataset from the flagship paper, [1000 Genomes Project Consortium et al. 2015][tgp_phase3_paper]; the data can be found [here][tgp_admixture_data]. This dataset contains genotype information for 2,504 individuals from 26 populations and 193,634 SNPs. The paper states that in the preparation of this dataset, variants with a minor allele frequency of less than 0.05 were filtered out and the genome was thinned to decrease the effect of linkage disequilibrium.
+
+Furthermore, we filtered out SNPs for which we had no ancestral allele information; ancestral allele information was obtained from the "2016-05-05 primary release (build 37, 2504 samples)" files downloaded from [here][ancestral_allele_info]. This reduced the number of SNPs to 185,116. We then re-coded the data matrix to be counts of derived alleles. From the individual by SNP data matrix $X$, we computed the scaled Gram matrix, $S = \frac{1}{p}XX'$ where $p$ is the number of SNPs.
+
+We load in the scaled Gram matrix.
+```{r load_data}
+S <- readRDS('data/tgp_cov_matrix.rds')
+```
+
+We also load in the meta data which contains population information for each sample.
+```{r load_meta}
+tgp_meta <- readRDS('data/tgp_meta.rds')
+```
+
+The samples come from 26 populations, which are grouped into 5 super-populations.
+```{r summary_meta}
+summary(tgp_meta$pop)
+summary(tgp_meta$super_pop)
+```
+
+# Using Flashier to fit GBCD
+
+We also want to note that this `fit_gbcd` call takes about 1 hour to complete.
+
+Now, we use the R package `flashier` to apply a simplified version of GBCD on the 1000 Genomes Project data. This is broken down into several steps.
+
+Step 1: Fit a point-Laplace EBMF fit to the scaled Gram matrix
+
+```{r pt_laplace_fit}
+tgp_cov_fit <- flash_init(data = S) |>
+  flash_greedy(Kmax = 11, ebnm_fn = ebnm::ebnm_point_laplace) |>
+  flash_backfit()
+```
+
+Note that `Kmax = 11` forces this initialization step to fit no more than 6 factors. However, it is possible for the final fit to have more than 11 factors (The number of factors in the final fit will be no more than 2\*`Kmax`). It is recommended to set `Kmax` to a larger value rather than a smaller one.
+
+Step 2: Split the factors into positive and negative components and refit the weights
+
+```{r split_function}
+split_pt_laplace_estimates <- function(cov_fit){
+  # S is the scaled Gram matrix
+  # cov_fit is a flash object
+  
+  LL <- cov_fit$L_pm
+  FF <- cov_fit$F_pm
+  
+# split into positive and negative components
+  LL <- cbind(pmax(LL, 0), pmax(-LL, 0))
+  FF <- cbind(pmax(FF, 0), pmax(-FF, 0))
+  
+  # remove columns of zeros
+  LL.idx.nonzero <- apply(LL, 2, function(x){return(sum(x^2))}) > 10^(-10)
+  FF.idx.nonzero <- apply(FF, 2, function(x){return(sum(x^2))}) > 10^(-10)
+  LL <- LL[, LL.idx.nonzero]
+  FF <- FF[, FF.idx.nonzero]
+  
+  # refit weights by least squares
+  # n <- nrow(S)
+  # lft_vec <- matrix(rep(0, ncol(LL)*n*n), ncol = ncol(LL))
+  # for (i in 1:ncol(LL)){
+  #   lft_vec[,i] <- c(LL[,i]%*%t(FF[,i]))
+  # }
+  # 
+  # nnlm_fit <- NNLM::nnlm(lft_vec, as.matrix(c(S), ncol = 1), alpha = c(0,0,0))
+  # 
+  # indices_keep <- (nnlm_fit$coefficients > 0)
+  # LL_scaled <- LL[,indices_keep] %*% diag(sqrt(nnlm_fit$coefficients[indices_keep]))
+  # FF_scaled <- FF[,indices_keep] %*% diag(sqrt(nnlm_fit$coefficients[indices_keep]))
+  return(list(LL, FF))
+}
+```
+
+```{r pt_laplace_split_init}
+pt_laplace_split_initialization <- split_pt_laplace_estimates(tgp_cov_fit)
+```
+
+Step 3: Fit a generalized-binary EBMF fit to the scaled Gram matrix
+
+```{r gb_fit}
+tgp_cov_fit <- flash_init(data = S) |>
+  flash_factors_init(pt_laplace_split_initialization, ebnm_fn = ebnm::ebnm_generalized_binary) |>
+  flash_backfit()
+```
+
+```{r scaled_gb_fit}
+tgp_cov_fit_scaled <- ldf(tgp_cov_fit, 'i')
+```
+
+Note that `prior = ebnm_generalized_binary` forces $L$ to be non-negative. So this generates a non-negative covariance matrix decomposition.    
+
+Step 4: Filter factors that are not similar across both estimates
+
+```{r scaled_loadings}
+tgp_cov_fit_scaled_L <- tgp_cov_fit_scaled$L %*% diag(sqrt(tgp_cov_fit_scaled$D))
+tgp_cov_fit_scaled_F <- tgp_cov_fit_scaled$F %*% diag(sqrt(tgp_cov_fit_scaled$D))
+```
+
+```{r filter_factors}
+# compute correlations
+factor_correlations <- diag(cor(tgp_cov_fit_scaled_L, tgp_cov_fit_scaled_F))
+factor_keep <- factor_correlations > 0.8
+```
+
+```{r final_loadings_estimate}
+tgp_cov_fit_filtered_scaled_L <- tgp_cov_fit_scaled_L[, factor_keep]
+```
+
+# Visualizing the Results
+
+A useful plot type for visualizing non-negative loadings matrices is the "structure plot" -- a stacked bar plot in which each component is represented as a bar of a different color, and the bar heights are given by the loadings on each component. 
+
+This is the structure plot for the loadings estimate from gbcd:
+```{r structure_plot_L}
+
+factor_colors <- Polychrome::kelly.colors(ncol(tgp_cov_fit_filtered_scaled_L)+1)[-1]
+
+L <- tgp_cov_fit_filtered_scaled_L
+k <- ncol(L)
+colnames(L) <- paste0("k",1:k)
+p1 <- structure_plot(L,grouping = tgp_meta$pop,
+                     colors = factor_colors,
+                     gap = 16,verbose = FALSE) +
+  labs(y = "membership",title = "GBCD")
+p1
+```
+
+Factor 1 (“k1” in the legend) appears to be a "baseline" factor. To focus on differences between samples, we can remove first factor from our structure plot:
+
+```{r structure_plot_wout_k1}
+p2 <- structure_plot(L[,-1],grouping = tgp_meta$pop,
+                     colors = factor_colors[-1],
+                     gap = 16,verbose = FALSE) +
+  labs(y = "membership",title = "GBCD")
+p2
+```
+
+From this plot, we can interpret the components of our decomposition. For example, factors 2, 6, and 7 ("k2", "k6", and "k7" in the plot) primarily capture the Africa super-population, East Asia super-population, and South Asian super-population, respectively. Other factors highlight components shared across super-populations. For example, factor 4 has some activity in both the East Asia and South Asia super-populations.
+
+The results also highlight interesting compositions for particular populations. For example, if we take a closer look at Japan (JPT), we see that most of the components match up with those of the other East Asian populations. However, Japan has an additional component, factor 9, which differentiates it from the other East Asian populations. Another example is Finland (FIN). Finland contains one component, factor 3, which is shared with other European populations. Additionally, it contains a unique component, factor 10. Another interesting example is Peru (PEL). Peru contains one component, factor 8, which primarily corresponds to the Americas super-population. However, it also contains other components, factors 4 and 6, which are shared with South Asian and/or East Asian populations. Furthermore, it contains a component, factor 3, that is shared with Europe and other populations in the Americas super-population.
+
+Interpretations of others factors: factor 5 implies a shared component between two African populations, Mende in Sierra Leone and Gambian in Western Division - Mandinka. Factor 12 corresponds to a unique component for the Luhya people of Webuye, Kenya. Factor 11 does not have a clear interpretation as it is very sparse and seems to only correspond to particular individuals in a population.
+
+# Session Info
+This is the version of R and the packages that were used to generate these results.
+
+```{r session-info}
+sessionInfo()
+```
+
+[tgp_phase3_paper]: https://www.nature.com/articles/nature15393
+
+[tgp_admixture_data]: https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/admixture_files/
+
+[ancestral_allele_info]: https://www.cog-genomics.org/plink/2.0/resources#phase3_1kg
+
