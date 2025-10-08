@@ -402,7 +402,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-10-06
+<strong>Last updated:</strong> 2025-10-08
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -533,15 +533,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomxxie6tgpanalysistreec9fef87b1299f2d4af523315853fc0d10cf36fa0targetblankc9fef87a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomxxie6tgpanalysistreeb256d9a9ca4ecf3f00e98a23d7629ccf1dd84970targetblankb256d9aa">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/xxie6/tgp_analysis/tree/c9fef87b1299f2d4af523315853fc0d10cf36fa0" target="_blank">c9fef87</a>
+<a href="https://github.com/xxie6/tgp_analysis/tree/b256d9a9ca4ecf3f00e98a23d7629ccf1dd84970" target="_blank">b256d9a</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomxxie6tgpanalysistreec9fef87b1299f2d4af523315853fc0d10cf36fa0targetblankc9fef87a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomxxie6tgpanalysistreeb256d9a9ca4ecf3f00e98a23d7629ccf1dd84970targetblankb256d9aa"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -551,7 +551,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/xxie6/tgp_analysis/tree/c9fef87b1299f2d4af523315853fc0d10cf36fa0" target="_blank">c9fef87</a>.
+<a href="https://github.com/xxie6/tgp_analysis/tree/b256d9a9ca4ecf3f00e98a23d7629ccf1dd84970" target="_blank">b256d9a</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -568,6 +568,10 @@ were generated:
 Ignored files:
     Ignored:    .DS_Store
     Ignored:    .Rhistory
+
+Untracked files:
+    Untracked:  analysis/gbcd_analysis.Rmd
+    Untracked:  data/gbcd_altscaling_tgp_analysis_k11.RData
 
 </code></pre>
 <p>
@@ -613,6 +617,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/xxie6/tgp_analysis/blob/b256d9a9ca4ecf3f00e98a23d7629ccf1dd84970/analysis/simplified_gbcd_analysis.Rmd" target="_blank">b256d9a</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2025-10-08
+</td>
+<td>
+Update simplified gbcd analysis
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/xxie6/tgp_analysis/0a1cb3a897ef6180d36e06a8cd5b7db68c2b6143/docs/simplified_gbcd_analysis.html" target="_blank">0a1cb3a</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2025-10-06
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -682,18 +720,16 @@ for each sample.</p>
 <p>The samples come from 26 populations, which are grouped into 5
 super-populations.</p>
 <pre class="r"><code>summary(tgp_meta$pop)</code></pre>
-<pre><code>GWD MSL YRI ESN LWK ACB ASW TSI IBS GBR CEU FIN PJL GIH ITU STU BEB CDX KHV CHS 
-113  85 108  99  99  96  61 107 107  91  99  99  96 103 102 102  86  93  99 105 
-CHB JPT PUR CLM MXL PEL 
-103 104 104  94  64  85 </code></pre>
+<pre><code>LWK ESN YRI MSL GWD ACB ASW CLM MXL PUR PEL TSI IBS GBR CEU FIN PJL GIH ITU STU 
+ 99  99 108  85 113  96  61  94  64 104  85 107 107  91  99  99  96 103 102 102 
+BEB CDX KHV CHS CHB JPT 
+ 86  93  99 105 103 104 </code></pre>
 <pre class="r"><code>summary(tgp_meta$super_pop)</code></pre>
 <pre><code>   Length     Class      Mode 
      2504 character character </code></pre>
 </div>
 <div id="using-flashier-to-fit-gbcd" class="section level1">
 <h1>Using Flashier to fit GBCD</h1>
-<p>We also want to note that this <code>fit_gbcd</code> call takes about
-1 hour to complete.</p>
 <p>Now, we use the R package <code>flashier</code> to apply a simplified
 version of GBCD on the 1000 Genomes Project data. This is broken down
 into several steps.</p>
@@ -822,13 +858,17 @@ p1 &lt;- structure_plot(L,grouping = tgp_meta$pop,
                      colors = factor_colors,
                      gap = 16,verbose = FALSE) +
   labs(y = &quot;membership&quot;,title = &quot;GBCD&quot;)</code></pre>
-<pre><code>Running tsne on 86 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 70 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 94 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 80 x 12 matrix.</code></pre>
 <pre><code>Running tsne on 77 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 80 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 94 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 70 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 86 x 12 matrix.</code></pre>
 <pre><code>Running tsne on 67 x 12 matrix.</code></pre>
 <pre><code>Running tsne on 47 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 77 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 52 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 89 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 67 x 12 matrix.</code></pre>
 <pre><code>Running tsne on 86 x 12 matrix.</code></pre>
 <pre><code>Running tsne on 90 x 12 matrix.</code></pre>
 <pre><code>Running tsne on 73 x 12 matrix.</code></pre>
@@ -844,10 +884,6 @@ p1 &lt;- structure_plot(L,grouping = tgp_meta$pop,
 <pre><code>Running tsne on 81 x 12 matrix.</code></pre>
 <pre><code>Running tsne on 88 x 12 matrix.</code></pre>
 <pre><code>Running tsne on 83 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 89 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 77 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 52 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 67 x 12 matrix.</code></pre>
 <pre><code>Warning: `aes_string()` was deprecated in ggplot2 3.0.0.
 ℹ Please use tidy evaluation idioms with `aes()`.
 ℹ See also `vignette(&quot;ggplot2-in-packages&quot;)` for more information.
@@ -859,6 +895,43 @@ Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
 generated.</code></pre>
 <pre class="r"><code>p1</code></pre>
 <p><img src="figure/simplified_gbcd_analysis.Rmd/structure_plot_L-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-structure_plot_L-1">
+Past versions of structure_plot_L-1.png
+</button>
+</p>
+<div id="fig-structure_plot_L-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/tgp_analysis/blob/0a1cb3a897ef6180d36e06a8cd5b7db68c2b6143/docs/figure/simplified_gbcd_analysis.Rmd/structure_plot_L-1.png" target="_blank">0a1cb3a</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2025-10-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Factor 1 (“k1” in the legend) appears to be a “baseline” factor. To
 focus on differences between samples, we can remove first factor from
 our structure plot:</p>
@@ -866,34 +939,71 @@ our structure plot:</p>
                      colors = factor_colors[-1],
                      gap = 16,verbose = FALSE) +
   labs(y = &quot;membership&quot;,title = &quot;GBCD&quot;)</code></pre>
-<pre><code>Running tsne on 95 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 65 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 84 x 11 matrix.
-Running tsne on 84 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 83 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 77 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 44 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 83 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 85 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 75 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 85 x 11 matrix.</code></pre>
 <pre><code>Running tsne on 82 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 70 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 81 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 80 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 75 x 11 matrix.
-Running tsne on 75 x 11 matrix.
-Running tsne on 75 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 80 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 82 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 81 x 11 matrix.</code></pre>
 <pre><code>Running tsne on 84 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 77 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 85 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 65 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 94 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 75 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 45 x 11 matrix.</code></pre>
 <pre><code>Running tsne on 81 x 11 matrix.</code></pre>
 <pre><code>Running tsne on 51 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 80 x 11 matrix.</code></pre>
 <pre><code>Running tsne on 66 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 88 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 90 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 72 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 81 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 79 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 77 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 83 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 85 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 74 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 70 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 74 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 83 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 79 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 76 x 11 matrix.</code></pre>
+<pre><code>Running tsne on 81 x 11 matrix.</code></pre>
 <pre class="r"><code>p2</code></pre>
 <p><img src="figure/simplified_gbcd_analysis.Rmd/structure_plot_wout_k1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-structure_plot_wout_k1-1">
+Past versions of structure_plot_wout_k1-1.png
+</button>
+</p>
+<div id="fig-structure_plot_wout_k1-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/tgp_analysis/blob/0a1cb3a897ef6180d36e06a8cd5b7db68c2b6143/docs/figure/simplified_gbcd_analysis.Rmd/structure_plot_wout_k1-1.png" target="_blank">0a1cb3a</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2025-10-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>From this plot, we can interpret the components of our decomposition.
 For example, factors 2, 6, and 7 (“k2”, “k6”, and “k7” in the plot)
 primarily capture the Africa super-population, East Asia
