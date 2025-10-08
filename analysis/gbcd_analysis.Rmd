@@ -1,0 +1,116 @@
+---
+title: "gbcd_analysis"
+author: "Annie Xie"
+date: "2025-10-06"
+output: 
+  workflowr::wflow_html:
+    code_folding: hide
+editor_options:
+  chunk_output_type: console
+---
+
+# Introduction
+
+The aim of this vignette is to illustrate how to use `gbcd` to obtain a decomposition of the 1000 Genomes Phase 3 dataset.
+
+We begin by loading the necessary packages. We also set the seed so that results can be fully reproduced.    
+```{r load_packages, message = FALSE, warning = FALSE, eval = FALSE}
+library(gbcd)
+library(flashier)
+library(ashr)
+library(ebnm)
+library(Matrix)
+```
+
+```{r load_packages_pt2, message = FALSE, warning = FALSE}
+library(pheatmap)
+library(ggplot2)
+library(fastTopics)
+library(cowplot)
+set.seed(3)
+```
+
+# Preparing the Data
+In this vignette, we will be working with the 1000 Genomes Project Phase 3 dataset. We started with the ADMIXTURE analysis dataset from the flagship paper, [1000 Genomes Project Consortium et al. 2015][tgp_phase3_paper]; the data can be found [here][tgp_admixture_data]. This dataset contains genotype information for 2,504 individuals from 26 populations and 193,634 SNPs. The paper states that in the preparation of this dataset, variants with a minor allele frequency of less than 0.05 were filtered out and the genome was thinned to decrease the effect of linkage disequilibrium.
+
+Furthermore, we filtered out SNPs for which we had no ancestral allele information; ancestral allele information was obtained from the "2016-05-05 primary release (build 37, 2504 samples)" files downloaded from [here][ancestral_allele_info]. This reduced the number of SNPs to 185,116. We then re-coded the data matrix to be counts of derived alleles. 
+
+# Meta Data
+We also load in the meta data which contains population information for each sample.
+```{r load_meta}
+tgp_meta <- readRDS('data/tgp_meta.rds')
+```
+
+The samples come from 26 populations, which are grouped into 5 super-populations.
+```{r summary_meta}
+summary(tgp_meta$pop)
+summary(tgp_meta$super_pop)
+```
+
+# Applying GBCD
+
+Now, we call `gbcd` to fit a decomposition to the 1000 Genomes Project data. Below is our call to `fit_gbcd`:
+```{r apply_gbcd, eval = FALSE}
+gbcd_1kg_fit <- fit_gbcd(Y, Kmax = 11,
+                  prior = ebnm::ebnm_generalized_binary,
+                  maxiter1 = 100, maxiter2 = 100, maxiter3 =
+                  100)
+```
+
+A few notes on the other arguments of this `fit_gbcd` call:   
+   
+* `prior = ebnm_generalized_binary` forces $L$ to be non-negative. So this generates a non-negative covariance matrix decomposition.    
+
+* `Kmax = 6` forces the initialization step of GBCD to fit no more than 6 factors. However, it is possible for the final GBCD fit to have more than 6 factors (The number of factors in the GBCD fit will be no more than 2\*`Kmax`). It is recommended to set `Kmax` to a larger value rather than a smaller one.
+
+We also want to note that this `fit_gbcd` call takes about 1 hour to complete. Therefore, we load in previously saved results.
+```{r load_gbcd_results}
+L <- readRDS('data/gbcd_cov_scaling_gb_k11.rds')
+```
+
+# Visualizing the Results
+
+A useful plot type for visualizing non-negative loadings matrices is the "structure plot" -- a stacked bar plot in which each component is represented as a bar of a different color, and the bar heights are given by the loadings on each component. 
+
+This is the structure plot for the loadings estimate from gbcd:
+```{r structure_plot_L}
+
+factor_colors <- Polychrome::kelly.colors()[-1]
+
+k <- ncol(L)
+colnames(L) <- paste0("k",1:k)
+p1 <- structure_plot(L,grouping = tgp_meta$pop,
+                     colors = factor_colors,
+                     gap = 16,verbose = FALSE) +
+  labs(y = "membership",title = "GBCD")
+p1
+```
+
+Factor 1 (“k1” in the legend) appears to be a "baseline" factor. To focus on differences between samples, we can remove first factor from our structure plot:
+
+```{r structure_plot_wout_k1}
+p2 <- structure_plot(L[,-1],grouping = tgp_meta$pop,
+                     colors = factor_colors[-1],
+                     gap = 16,verbose = FALSE) +
+  labs(y = "membership",title = "GBCD")
+p2
+```
+
+Using these plots, we can interpret the components of our decomposition. First, factor 1 ("k1" in the plot) appears to be a baseline factor. Some of the factors seem to capture super-population effects. For example, factors 2 and 4 primarily capture the Africa and East Asia super-populations, respectively. Other factors highlight components shared across super-populations. For example, factor 5 has activity in the East Asia and South Asia super-populations, as well as some populations in the Europe and Americas super-populations. Another example is factor 3. Factor 3 has the highest levels of activity in the Europe super-population with lower levels in the Americas and South Asia super-populations.
+
+The results also highlight interesting compositions for particular populations. For example, there are some population-specific factors. If we take a closer look at Japanese in Tokyo, Japan (JPT), we see that most of the components match up with those of the other East Asian populations. However, JPT has an additional component, factor 10, which differentiates it from the other East Asian populations. Similarly, Luhya in Webuye, Kenya (LWK) has a lot of overlap with other populations in the Africa super-population, but has an additional factor, factor 12, which differentiates it from the others.
+
+Finland (FIN) shows an interesting combination of the shared factors. Finland contains one component, factor 3, which is primarily shared with other European populations. Additionally, it contains one component, factor 5, which is shared with primarily the East and South Asia super-population. Finland also has one component, factor 9, which is shared with the Americas super-population and some populations in the Europe super-population.
+
+# Session Info
+This is the version of R and the packages that were used to generate these results.
+
+```{r session-info}
+sessionInfo()
+```
+
+[tgp_phase3_paper]: https://www.nature.com/articles/nature15393
+
+[tgp_admixture_data]: https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/admixture_files/
+
+[ancestral_allele_info]: https://www.cog-genomics.org/plink/2.0/resources#phase3_1kg
