@@ -390,7 +390,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-10-06
+<strong>Last updated:</strong> 2025-10-08
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -521,15 +521,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomxxie6tgpanalysistree082db0113b5ec2e511ccc4608e3e35594a6806d8targetblank082db01a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomxxie6tgpanalysistree28f109c154339f6b4a8f0a35618f67976e47984dtargetblank28f109ca">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/xxie6/tgp_analysis/tree/082db0113b5ec2e511ccc4608e3e35594a6806d8" target="_blank">082db01</a>
+<a href="https://github.com/xxie6/tgp_analysis/tree/28f109c154339f6b4a8f0a35618f67976e47984d" target="_blank">28f109c</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomxxie6tgpanalysistree082db0113b5ec2e511ccc4608e3e35594a6806d8targetblank082db01a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomxxie6tgpanalysistree28f109c154339f6b4a8f0a35618f67976e47984dtargetblank28f109ca"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -539,7 +539,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/xxie6/tgp_analysis/tree/082db0113b5ec2e511ccc4608e3e35594a6806d8" target="_blank">082db01</a>.
+<a href="https://github.com/xxie6/tgp_analysis/tree/28f109c154339f6b4a8f0a35618f67976e47984d" target="_blank">28f109c</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -558,9 +558,11 @@ Ignored files:
     Ignored:    .Rhistory
 
 Untracked files:
-    Untracked:  analysis/simplified_gbcd_analysis.Rmd
-    Untracked:  data/tgp_cov_matrix.rds
-    Untracked:  data/tgp_meta.rds
+    Untracked:  analysis/gbcd_analysis.Rmd
+    Untracked:  data/gbcd_altscaling_tgp_analysis_k11.RData
+
+Unstaged changes:
+    Modified:   analysis/simplified_gbcd_analysis.Rmd
 
 </code></pre>
 <p>
@@ -605,6 +607,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/xxie6/tgp_analysis/blob/28f109c154339f6b4a8f0a35618f67976e47984d/analysis/tgp_data_processing.Rmd" target="_blank">28f109c</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2025-10-08
+</td>
+<td>
+Update data processing analysis
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/xxie6/tgp_analysis/8dda0823b83aac40c4e1b4ca349efc0daef8a92d/docs/tgp_data_processing.html" target="_blank">8dda082</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2025-10-06
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -712,12 +748,11 @@ tgp_meta &lt;- kgp::kgp3
 tgp_meta &lt;- tgp_meta %&gt;%
   select(sample = id, gender = sexf, pop = pop, super_pop = reg)
 
-tgp_meta$pop &lt;- factor(tgp_meta$pop, levels=c(&quot;GWD&quot;,&quot;MSL&quot;,&quot;YRI&quot;,&quot;ESN&quot;,&quot;LWK&quot;,
-                            &quot;ACB&quot;,&quot;ASW&quot;,
-                            &quot;TSI&quot;,&quot;IBS&quot;,&quot;GBR&quot;,&quot;CEU&quot;,&quot;FIN&quot;,&quot;PJL&quot;,&quot;GIH&quot;,
-                            &quot;ITU&quot;,&quot;STU&quot;,&quot;BEB&quot;,
-                            &quot;CDX&quot;,&quot;KHV&quot;,&quot;CHS&quot;,&quot;CHB&quot;,&quot;JPT&quot;,
-                            &quot;PUR&quot;,&quot;CLM&quot;,&quot;MXL&quot;,&quot;PEL&quot;))
+tgp_meta$pop &lt;- factor(tgp_meta$pop, levels=c(&quot;LWK&quot;,&quot;ESN&quot;,&quot;YRI&quot;,&quot;MSL&quot;,&quot;GWD&quot;,&quot;ACB&quot;,&quot;ASW&quot;,
+                                              &quot;CLM&quot;,&quot;MXL&quot;,&quot;PUR&quot;,&quot;PEL&quot;,&quot;TSI&quot;,
+                                              &quot;IBS&quot;,&quot;GBR&quot;,&quot;CEU&quot;,&quot;FIN&quot;,
+                                              &quot;PJL&quot;,&quot;GIH&quot;,&quot;ITU&quot;,&quot;STU&quot;,&quot;BEB&quot;,
+                                              &quot;CDX&quot;,&quot;KHV&quot;,&quot;CHS&quot;,&quot;CHB&quot;,&quot;JPT&quot;))
 
 # reorder to match the ordering of samples in 1000 Genomes Project data
 tgp_fam_data_id &lt;- genio::read_fam(&#39;tgp_admixture_data.fam&#39;)$id
