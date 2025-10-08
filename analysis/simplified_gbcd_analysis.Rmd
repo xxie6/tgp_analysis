@@ -46,9 +46,6 @@ summary(tgp_meta$super_pop)
 ```
 
 # Using Flashier to fit GBCD
-
-We also want to note that this `fit_gbcd` call takes about 1 hour to complete.
-
 Now, we use the R package `flashier` to apply a simplified version of GBCD on the 1000 Genomes Project data. This is broken down into several steps.
 
 Step 1: Fit a point-Laplace EBMF fit to the scaled Gram matrix
