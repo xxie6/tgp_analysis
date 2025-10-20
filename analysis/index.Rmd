@@ -8,4 +8,10 @@ editor_options:
   chunk_output_type: console
 ---
 
-Welcome to my research website.
+This is a workflowr website with my analyses on the 1000 Genomes Project data.
+
+Analyses:  
+  
+* Explanation of [how the data was processed](tgp_data_processing.html)  
+* Analysis of data with [simplified gbcd using flashier](simplified_gbcd_analysis.html)  
+* Analysis of data with [Yusha's gbcd method](gbcd_analysis.html)  
