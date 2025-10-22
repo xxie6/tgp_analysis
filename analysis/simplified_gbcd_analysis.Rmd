@@ -126,7 +126,7 @@ hist(factor_correlations, main = "Histogram of Correlations", xlab = 'Correlatio
 ```
 
 ```{r}
-factor_keep <- factor_correlations > 0.5
+factor_keep <- factor_correlations > 0.8
 ```
 
 ```{r final_loadings_estimate}
@@ -162,11 +162,11 @@ p2 <- structure_plot(L[,-1],grouping = tgp_meta$pop,
 p2
 ```
 
-From this plot, we can interpret the components of our decomposition. For example, factors 2, 7, and 8 ("k2", "k7", and "k8" in the plot) primarily capture the Africa super-population, East Asia super-population, and South Asian super-population, respectively. Other factors highlight components shared across super-populations. For example, factor 4 has some activity in both the East Asia and South Asia super-populations.
+From this plot, we can interpret the components of our decomposition. For example, factors 2, 6, and 7 ("k2", "k6", and "k7" in the plot) primarily capture the Africa super-population, East Asia super-population, and South Asian super-population, respectively. Other factors highlight components shared across super-populations. For example, factor 4 has some activity in both the East Asia and South Asia super-populations.
 
-The results also highlight interesting compositions for particular populations. For example, if we take a closer look at Japanese in Tokyo, Japan (JPT), we see that most of the components match up with those of the other East Asian populations. However, Japan has an additional component, factor 10, which differentiates it from the other East Asian populations. Another example is Finnish in Finland (FIN). Finland contains one component, factor 3, which is shared with other European populations. Additionally, it contains a unique component, factor 11. Another interesting example is Peruvian from Lima, Peru (PEL). Peru contains one component, factor 9, which primarily corresponds to the Americas super-population. However, it also contains other components, factors 4 and 7, which are shared with South Asian and/or East Asian populations. Furthermore, it contains a component, factor 3, that is shared with Europe and other populations in the Americas super-population.
+The results also highlight interesting compositions for particular populations. For example, if we take a closer look at Japanese in Tokyo, Japan (JPT), we see that most of the components match up with those of the other East Asian populations. However, Japan has an additional component, factor 9, which differentiates it from the other East Asian populations. Another example is Finnish in Finland (FIN). Finland contains one component, factor 3, which is shared with other European populations. Additionally, it contains a unique component, factor 10. Another interesting example is Peruvian from Lima, Peru (PEL). Peru contains one component, factor 8, which primarily corresponds to the Americas super-population. However, it also contains other components, factors 4 and 6, which are shared with South Asian and/or East Asian populations. Furthermore, it contains a component, factor 3, that is shared with Europe and other populations in the Americas super-population.
 
-Interpretations of others factors: factor 5 implies a shared component between two African populations, Mende in Sierra Leone and Gambian in Western Division - Mandinka. Factor 13 corresponds to a unique component for the Luhya people of Webuye, Kenya. Factor 6 represents a shared component between Han Chinese in Beijing, Southern Han Chinese, and Japanese in Tokyo, Japan. 
+Interpretations of others factors: factor 5 implies a shared component between two African populations, Mende in Sierra Leone and Gambian in Western Division - Mandinka. Factor 12 corresponds to a unique component for the Luhya people of Webuye, Kenya.
 
 # Session Info
 This is the version of R and the packages that were used to generate these results.
