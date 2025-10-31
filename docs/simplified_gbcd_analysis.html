@@ -402,7 +402,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-10-22
+<strong>Last updated:</strong> 2025-10-31
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -533,15 +533,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomxxie6tgpanalysistreeffecc49f3653eeba7e7cff140d51e98068eaa15etargetblankffecc49a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomxxie6tgpanalysistree351499c63935b12012b9d018995a10bd1bf149e1targetblank351499ca">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/xxie6/tgp_analysis/tree/ffecc49f3653eeba7e7cff140d51e98068eaa15e" target="_blank">ffecc49</a>
+<a href="https://github.com/xxie6/tgp_analysis/tree/351499c63935b12012b9d018995a10bd1bf149e1" target="_blank">351499c</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomxxie6tgpanalysistreeffecc49f3653eeba7e7cff140d51e98068eaa15etargetblankffecc49a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomxxie6tgpanalysistree351499c63935b12012b9d018995a10bd1bf149e1targetblank351499ca"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -551,7 +551,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/xxie6/tgp_analysis/tree/ffecc49f3653eeba7e7cff140d51e98068eaa15e" target="_blank">ffecc49</a>.
+<a href="https://github.com/xxie6/tgp_analysis/tree/351499c63935b12012b9d018995a10bd1bf149e1" target="_blank">351499c</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -571,7 +571,13 @@ Ignored files:
     Ignored:    data/.DS_Store
 
 Untracked files:
-    Untracked:  analysis/simplified_gbcd_with_diagonal_analysis.Rmd
+    Untracked:  analysis/gbcd_stability_selection_analysis.Rmd
+    Untracked:  analysis/simplified_gbcd_binormal.Rmd
+    Untracked:  analysis/simplified_gbcd_ptexp.Rmd
+    Untracked:  analysis/simplified_gbcd_with_extrapolation.Rmd
+
+Unstaged changes:
+    Modified:   analysis/simplified_gbcd_with_diagonal_analysis.Rmd
 
 </code></pre>
 <p>
@@ -617,6 +623,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/xxie6/tgp_analysis/blob/351499c63935b12012b9d018995a10bd1bf149e1/analysis/simplified_gbcd_analysis.Rmd" target="_blank">351499c</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2025-10-31
+</td>
+<td>
+Update simplified gbcd analysis
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/xxie6/tgp_analysis/b05d0f409fa23277d38476cb5a94fe16acc03042/docs/simplified_gbcd_analysis.html" target="_blank">b05d0f4</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2025-10-22
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -757,6 +797,7 @@ library(ggplot2)
 library(fastTopics)
 library(cowplot)
 set.seed(3)</code></pre>
+<pre class="r"><code>source(&#39;code/visualization_functions.R&#39;)</code></pre>
 <div id="preparing-the-data" class="section level1">
 <h1>Preparing the Data</h1>
 <p>In this vignette, we will be working with the 1000 Genomes Project
@@ -802,20 +843,51 @@ BEB CDX KHV CHS CHB JPT
 version of GBCD on the 1000 Genomes Project data. This is broken down
 into several steps.</p>
 <p>Step 1: Fit a point-Laplace EBMF fit to the scaled Gram matrix</p>
-<pre class="r"><code>tgp_cov_fit &lt;- flash_init(data = S) |&gt;
+<p>First, we use <code>flashier</code> to fit <span
+class="math inline">\(S \approx L \tilde{L}&#39;\)</span> with
+point-Laplace priors over the columns of <span
+class="math inline">\(L\)</span> and <span
+class="math inline">\(\tilde{L}\)</span>. Note that because <span
+class="math inline">\(S\)</span> is symmetric, we expect <span
+class="math inline">\(L \approx \tilde{L}\)</span>.</p>
+<pre class="r"><code>start_time &lt;- Sys.time()
+tgp_cov_fit &lt;- flash_init(data = S) |&gt;
+  flash_set_verbose(2) |&gt;
   flash_greedy(Kmax = 11, ebnm_fn = ebnm::ebnm_point_laplace) |&gt;
-  flash_backfit()</code></pre>
+  flash_backfit(extrapolate = TRUE, warmstart = TRUE, maxiter = 500)</code></pre>
 <pre><code>Adding factor 1 to flash object...
+  Optimizing factor...
+  Factor successfully added. Objective: 12345425.462 
 Adding factor 2 to flash object...
+  Optimizing factor...
+  Factor successfully added. Objective: 16794025.382 
 Adding factor 3 to flash object...
+  Optimizing factor...
+  Factor successfully added. Objective: 21452511.969 
 Adding factor 4 to flash object...
+  Optimizing factor...
+  Factor successfully added. Objective: 22347650.651 
 Adding factor 5 to flash object...
+  Optimizing factor...
+  Factor successfully added. Objective: 22976960.439 
 Adding factor 6 to flash object...
+  Optimizing factor...
+  Factor successfully added. Objective: 23000794.743 
 Adding factor 7 to flash object...
+  Optimizing factor...
+  Factor successfully added. Objective: 23014990.146 
 Adding factor 8 to flash object...
+  Optimizing factor...
+  Factor successfully added. Objective: 23026470.100 
 Adding factor 9 to flash object...
+  Optimizing factor...
+  Factor successfully added. Objective: 23031547.371 
 Adding factor 10 to flash object...
+  Optimizing factor...
+  Factor successfully added. Objective: 23035454.208 
 Adding factor 11 to flash object...
+  Optimizing factor...
+  Factor successfully added. Objective: 23036843.713 
 Wrapping up...
 Done.
 Backfitting 11 factors (tolerance: 9.34e-02)...
@@ -825,6 +897,7 @@ Backfitting 11 factors (tolerance: 9.34e-02)...
   Difference between iterations is within 1.0e+01...
   Difference between iterations is within 1.0e+00...
   Difference between iterations is within 1.0e-01...
+  Backfit complete. Objective: 23134110.435 
 Wrapping up...
 Done.</code></pre>
 <p>Note that <code>Kmax = 11</code> forces this initialization step to
@@ -832,8 +905,24 @@ fit no more than 11 factors. However, it is possible for the final fit
 to have more than 11 factors (The number of factors in the final fit
 will be no more than 2*<code>Kmax</code>). It is recommended to set
 <code>Kmax</code> to a larger value rather than a smaller one.</p>
-<p>Step 2: Split the factors into positive and negative components and
-refit the weights</p>
+<p>This is a visualization of the point-Laplace fit loadings:</p>
+<pre class="r"><code>tgp_cov_fit_ptlaplace_scaled &lt;- ldf(tgp_cov_fit, &#39;i&#39;)</code></pre>
+<p>This is a scatterplot of the factors in <span
+class="math inline">\(L\)</span>:</p>
+<pre class="r"><code>plot_loadings(tgp_cov_fit_ptlaplace_scaled$L %*% diag(sqrt(tgp_cov_fit_ptlaplace_scaled$D)), tgp_meta$pop, legendYN = FALSE)</code></pre>
+<p><img src="figure/simplified_gbcd_analysis.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This is a scatterplot of the factors in <span
+class="math inline">\(\tilde{L}\)</span>:</p>
+<pre class="r"><code>plot_loadings(tgp_cov_fit_ptlaplace_scaled$F %*% diag(sqrt(tgp_cov_fit_ptlaplace_scaled$D)), tgp_meta$pop, legendYN = FALSE)</code></pre>
+<p><img src="figure/simplified_gbcd_analysis.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Step 2: Split the factors into positive and negative components</p>
+<p>Now, we split the factors from the flash fit into its positive and
+negative components. In particular, we construct the matrices <span
+class="math display">\[\hat{L}_{nonneg} = \big[ \max\{\hat{L}, 0_{N
+\times K}\}, \ \max\{-\hat{L}, 0_{N \times K} \} \big]\]</span> <span
+class="math display">\[\hat{\tilde{L}}_{nonneg} = \big[
+\max\{\hat{\tilde{L}}, 0_{N \times K}\}, \ \max\{-\hat{\tilde{L}}, 0_{N
+\times K} \} \big]\]</span></p>
 <pre class="r"><code>split_pt_laplace_estimates &lt;- function(cov_fit){
   # S is the scaled Gram matrix
   # cov_fit is a flash object
@@ -868,86 +957,752 @@ refit the weights</p>
 <pre class="r"><code>pt_laplace_split_initialization &lt;- split_pt_laplace_estimates(tgp_cov_fit)</code></pre>
 <p>Step 3: Fit a generalized-binary EBMF fit to the scaled Gram
 matrix</p>
-<pre class="r"><code>tgp_cov_fit &lt;- flash_init(data = S) |&gt;
+<p>Now, we use <code>flashier</code> to fit <span
+class="math inline">\(S \approx L \tilde{L}&#39;\)</span> with
+generalized-binary priors over the columns of <span
+class="math inline">\(L\)</span> and <span
+class="math inline">\(\tilde{L}\)</span>. We initialize this fit with
+<span class="math inline">\(\hat{L}_{nonneg}\)</span> and <span
+class="math inline">\(\hat{\tilde{L}}_{nonneg}\)</span>, constructed in
+the previous step.</p>
+<pre class="r"><code>start_time &lt;- Sys.time()
+tgp_cov_gb_fit &lt;- flash_init(data = S) |&gt;
+  flash_set_verbose(2) |&gt;
   flash_factors_init(pt_laplace_split_initialization, ebnm_fn = ebnm::ebnm_generalized_binary) |&gt;
-  flash_backfit()</code></pre>
+  flash_backfit(extrapolate = FALSE, warmstart = TRUE, maxiter = 200)</code></pre>
 <pre><code>Backfitting 21 factors (tolerance: 9.34e-02)...
-  Difference between iterations is within 1.0e+06...
+An update to factor 9 decreased the objective by 3.453e-01.
+An update to factor 18 decreased the objective by 9.536e+02.
+An update to factor 21 decreased the objective by 9.101e-01.
+An update to factor 9 decreased the objective by 1.033e+00.
+An update to factor 9 decreased the objective by 7.825e-01.
+An update to factor 21 decreased the objective by 3.764e-01.
   Difference between iterations is within 1.0e+05...
-  --Estimate of factor 18 is numerically zero!
-  --Estimate of factor 19 is numerically zero!
-  --Estimate of factor 20 is numerically zero!
-  --Estimate of factor 21 is numerically zero!
-  --Estimate of factor 9 is numerically zero!
-  --Estimate of factor 10 is numerically zero!
-  --Estimate of factor 11 is numerically zero!
-  --Estimate of factor 12 is numerically zero!
-  --Estimate of factor 13 is numerically zero!
-  --Estimate of factor 14 is numerically zero!
-  --Estimate of factor 15 is numerically zero!
-  --Estimate of factor 16 is numerically zero!
-  --Estimate of factor 17 is numerically zero!
-  --Estimate of factor 18 is numerically zero!
-  --Estimate of factor 19 is numerically zero!
-  --Estimate of factor 20 is numerically zero!
-  --Estimate of factor 21 is numerically zero!
+An update to factor 9 decreased the objective by 4.421e-01.
+An update to factor 21 decreased the objective by 2.741e-01.
+An update to factor 18 decreased the objective by 4.717e-02.
+An update to factor 21 decreased the objective by 3.085e-04.
+An update to factor 9 decreased the objective by 1.106e+00.
+An update to factor 18 decreased the objective by 2.492e-02.
+An update to factor 21 decreased the objective by 2.161e+00.
+An update to factor 9 decreased the objective by 8.437e-01.
+An update to factor 21 decreased the objective by 2.603e-04.
   Difference between iterations is within 1.0e+04...
+An update to factor 9 decreased the objective by 1.175e+00.
+An update to factor 18 decreased the objective by 1.104e-01.
+An update to factor 21 decreased the objective by 7.967e-01.
+An update to factor 9 decreased the objective by 7.804e-01.
+An update to factor 18 decreased the objective by 1.187e-01.
+An update to factor 21 decreased the objective by 2.321e+00.
+An update to factor 9 decreased the objective by 9.673e-01.
+An update to factor 18 decreased the objective by 1.226e-01.
+An update to factor 21 decreased the objective by 1.972e+00.
+An update to factor 9 decreased the objective by 9.469e-01.
+An update to factor 18 decreased the objective by 1.246e-01.
+An update to factor 21 decreased the objective by 4.285e+00.
+An update to factor 9 decreased the objective by 7.373e-01.
+An update to factor 18 decreased the objective by 1.241e-01.
+An update to factor 21 decreased the objective by 2.009e+00.
+An update to factor 9 decreased the objective by 6.432e-01.
+An update to factor 18 decreased the objective by 8.814e-02.
+An update to factor 21 decreased the objective by 6.869e+00.
+An update to factor 9 decreased the objective by 3.241e-07.
+An update to factor 18 decreased the objective by 3.805e-03.
+An update to factor 21 decreased the objective by 6.452e+00.
+An update to factor 9 decreased the objective by 2.082e-06.
+An update to factor 21 decreased the objective by 6.830e+00.
   Difference between iterations is within 1.0e+03...
+An update to factor 9 decreased the objective by 2.272e-01.
+An update to factor 18 decreased the objective by 3.502e-03.
+An update to factor 21 decreased the objective by 2.349e+00.
+An update to factor 9 decreased the objective by 3.674e-01.
+An update to factor 18 decreased the objective by 4.425e-03.
+An update to factor 21 decreased the objective by 2.538e+00.
+An update to factor 9 decreased the objective by 2.713e-01.
+An update to factor 18 decreased the objective by 6.407e-03.
+An update to factor 21 decreased the objective by 2.433e+00.
+An update to factor 9 decreased the objective by 2.487e-01.
+An update to factor 18 decreased the objective by 8.057e-03.
+An update to factor 21 decreased the objective by 2.585e-01.
+An update to factor 9 decreased the objective by 2.201e-01.
+An update to factor 18 decreased the objective by 9.676e-03.
+An update to factor 21 decreased the objective by 2.383e-01.
+An update to factor 9 decreased the objective by 1.940e-01.
+An update to factor 18 decreased the objective by 1.142e-02.
+An update to factor 21 decreased the objective by 2.355e+00.
+An update to factor 9 decreased the objective by 1.656e-01.
+An update to factor 18 decreased the objective by 1.302e-02.
+An update to factor 21 decreased the objective by 2.408e-01.
+An update to factor 9 decreased the objective by 1.475e-01.
+An update to factor 18 decreased the objective by 1.462e-02.
+An update to factor 21 decreased the objective by 2.389e-01.
+An update to factor 9 decreased the objective by 1.286e-01.
+An update to factor 18 decreased the objective by 1.600e-02.
+An update to factor 21 decreased the objective by 6.767e+00.
+An update to factor 9 decreased the objective by 1.212e-01.
+An update to factor 18 decreased the objective by 1.724e-02.
+An update to factor 21 decreased the objective by 2.279e-01.
+An update to factor 9 decreased the objective by 1.214e-01.
+An update to factor 18 decreased the objective by 1.852e-02.
+An update to factor 21 decreased the objective by 2.191e-01.
+An update to factor 9 decreased the objective by 9.720e-02.
+An update to factor 18 decreased the objective by 1.996e-02.
+An update to factor 21 decreased the objective by 1.881e-01.
+An update to factor 9 decreased the objective by 1.233e-01.
+An update to factor 18 decreased the objective by 2.157e-02.
+An update to factor 20 decreased the objective by 9.426e-05.
+An update to factor 21 decreased the objective by 1.216e-01.
+An update to factor 9 decreased the objective by 1.155e-01.
+An update to factor 18 decreased the objective by 2.296e-02.
+An update to factor 20 decreased the objective by 1.115e-04.
+An update to factor 21 decreased the objective by 1.494e-01.
+An update to factor 9 decreased the objective by 1.209e-01.
+An update to factor 18 decreased the objective by 2.499e-02.
+An update to factor 20 decreased the objective by 7.716e-05.
+An update to factor 21 decreased the objective by 1.675e-01.
+An update to factor 9 decreased the objective by 1.167e-01.
+An update to factor 18 decreased the objective by 2.725e-02.
+An update to factor 20 decreased the objective by 5.257e-05.
+An update to factor 21 decreased the objective by 1.435e-01.
+An update to factor 9 decreased the objective by 9.850e-02.
+An update to factor 18 decreased the objective by 2.866e-02.
+An update to factor 20 decreased the objective by 3.558e-05.
+An update to factor 21 decreased the objective by 1.306e-01.
+An update to factor 9 decreased the objective by 8.961e-02.
+An update to factor 18 decreased the objective by 2.816e-02.
+An update to factor 20 decreased the objective by 2.198e-05.
+An update to factor 21 decreased the objective by 3.049e-04.
+An update to factor 9 decreased the objective by 1.075e-01.
+An update to factor 18 decreased the objective by 1.645e-02.
+An update to factor 20 decreased the objective by 1.212e-05.
+An update to factor 21 decreased the objective by 4.176e+00.
   Difference between iterations is within 1.0e+02...
-  Difference between iterations is within 1.0e+01...
-  Difference between iterations is within 1.0e+00...
+An update to factor 9 decreased the objective by 1.020e-01.
+An update to factor 20 decreased the objective by 9.269e-06.
+An update to factor 21 decreased the objective by 5.485e-02.
+An update to factor 9 decreased the objective by 6.967e-02.
+An update to factor 20 decreased the objective by 1.454e-05.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 20 decreased the objective by 5.614e-06.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 3.077e-04.
+An update to factor 20 decreased the objective by 8.509e-06.
+An update to factor 21 decreased the objective by 3.049e-04.
+An update to factor 9 decreased the objective by 2.199e-03.
+An update to factor 20 decreased the objective by 1.461e-05.
+An update to factor 21 decreased the objective by 3.052e-04.
+An update to factor 9 decreased the objective by 1.777e-03.
+An update to factor 20 decreased the objective by 2.009e-05.
+An update to factor 21 decreased the objective by 3.048e-04.
+An update to factor 9 decreased the objective by 3.586e-03.
+An update to factor 20 decreased the objective by 2.864e-05.
+An update to factor 21 decreased the objective by 3.049e-04.
+An update to factor 9 decreased the objective by 6.380e-04.
+An update to factor 20 decreased the objective by 4.013e-05.
+An update to factor 21 decreased the objective by 3.049e-04.
+An update to factor 20 decreased the objective by 5.049e-05.
+An update to factor 21 decreased the objective by 3.046e-04.
+An update to factor 9 decreased the objective by 4.997e-03.
+An update to factor 20 decreased the objective by 6.015e-05.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 7.583e-03.
+An update to factor 18 decreased the objective by 3.819e-03.
+An update to factor 20 decreased the objective by 6.179e-05.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 7.736e-03.
+An update to factor 18 decreased the objective by 1.036e-01.
+An update to factor 20 decreased the objective by 6.699e-05.
+An update to factor 21 decreased the objective by 3.047e-04.
+An update to factor 9 decreased the objective by 8.060e-03.
+An update to factor 18 decreased the objective by 1.454e-02.
+An update to factor 20 decreased the objective by 7.977e-05.
+An update to factor 21 decreased the objective by 3.049e-04.
+An update to factor 9 decreased the objective by 8.064e-03.
+An update to factor 18 decreased the objective by 1.466e-03.
+An update to factor 20 decreased the objective by 9.522e-05.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 7.889e-03.
+An update to factor 20 decreased the objective by 1.123e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 8.058e-03.
+An update to factor 20 decreased the objective by 1.284e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 8.450e-03.
+An update to factor 20 decreased the objective by 1.447e-04.
+An update to factor 21 decreased the objective by 3.047e-04.
+An update to factor 9 decreased the objective by 8.908e-03.
+An update to factor 20 decreased the objective by 1.630e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 6.314e-03.
+An update to factor 20 decreased the objective by 1.827e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 3.651e-03.
+An update to factor 20 decreased the objective by 2.046e-04.
+An update to factor 21 decreased the objective by 3.047e-04.
+An update to factor 9 decreased the objective by 5.008e-03.
+An update to factor 20 decreased the objective by 2.280e-04.
+An update to factor 21 decreased the objective by 3.640e-02.
+An update to factor 9 decreased the objective by 6.899e-03.
+An update to factor 20 decreased the objective by 2.459e-04.
+An update to factor 21 decreased the objective by 3.048e-04.
+An update to factor 9 decreased the objective by 6.266e-03.
+An update to factor 20 decreased the objective by 2.658e-04.
+An update to factor 21 decreased the objective by 3.344e+00.
+An update to factor 9 decreased the objective by 6.123e-03.
+An update to factor 20 decreased the objective by 2.674e-04.
+An update to factor 21 decreased the objective by 3.047e-04.
+An update to factor 9 decreased the objective by 5.855e-03.
+An update to factor 18 decreased the objective by 7.506e-03.
+An update to factor 20 decreased the objective by 2.922e-04.
+An update to factor 21 decreased the objective by 3.049e-04.
+An update to factor 9 decreased the objective by 7.364e-03.
+An update to factor 20 decreased the objective by 3.141e-04.
+An update to factor 21 decreased the objective by 3.298e+00.
+An update to factor 20 decreased the objective by 3.251e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 6.577e-03.
+An update to factor 18 decreased the objective by 3.270e-03.
+An update to factor 20 decreased the objective by 3.364e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 1.473e-02.
+An update to factor 20 decreased the objective by 3.577e-04.
+An update to factor 21 decreased the objective by 3.047e-04.
+An update to factor 9 decreased the objective by 9.951e-03.
+An update to factor 18 decreased the objective by 2.053e-03.
+An update to factor 20 decreased the objective by 3.806e-04.
+An update to factor 21 decreased the objective by 3.047e-04.
+An update to factor 9 decreased the objective by 6.174e-03.
+An update to factor 18 decreased the objective by 6.423e-03.
+An update to factor 20 decreased the objective by 4.034e-04.
+An update to factor 21 decreased the objective by 3.047e-04.
+An update to factor 9 decreased the objective by 3.233e-03.
+An update to factor 18 decreased the objective by 9.059e-03.
+An update to factor 20 decreased the objective by 4.261e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 5.339e-03.
+An update to factor 20 decreased the objective by 4.504e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 7.201e-03.
+An update to factor 20 decreased the objective by 4.774e-04.
+An update to factor 21 decreased the objective by 4.798e-02.
+An update to factor 9 decreased the objective by 1.031e-02.
+An update to factor 20 decreased the objective by 5.070e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 4.273e-03.
+An update to factor 20 decreased the objective by 5.247e-04.
+An update to factor 21 decreased the objective by 3.045e-04.
+An update to factor 20 decreased the objective by 5.461e-04.
+An update to factor 21 decreased the objective by 3.049e-04.
+An update to factor 20 decreased the objective by 5.696e-04.
+An update to factor 21 decreased the objective by 3.040e-04.
+An update to factor 20 decreased the objective by 5.928e-04.
+An update to factor 21 decreased the objective by 3.046e-04.
+An update to factor 9 decreased the objective by 1.573e-03.
+An update to factor 20 decreased the objective by 6.162e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 1.892e-03.
+An update to factor 20 decreased the objective by 6.389e-04.
+An update to factor 21 decreased the objective by 3.048e-04.
+An update to factor 9 decreased the objective by 2.532e-03.
+An update to factor 20 decreased the objective by 6.603e-04.
+An update to factor 21 decreased the objective by 3.049e-04.
+An update to factor 9 decreased the objective by 2.349e-03.
+An update to factor 20 decreased the objective by 6.794e-04.
+An update to factor 21 decreased the objective by 3.047e-04.
+An update to factor 9 decreased the objective by 9.154e-03.
+An update to factor 20 decreased the objective by 6.987e-04.
+An update to factor 21 decreased the objective by 2.510e-02.
+An update to factor 9 decreased the objective by 1.093e-02.
+An update to factor 20 decreased the objective by 7.177e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 1.091e-02.
+An update to factor 20 decreased the objective by 7.342e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 8.015e-03.
+An update to factor 20 decreased the objective by 7.472e-04.
+An update to factor 21 decreased the objective by 3.049e-04.
+An update to factor 9 decreased the objective by 7.270e-03.
+An update to factor 20 decreased the objective by 7.588e-04.
+An update to factor 21 decreased the objective by 3.047e-04.
+An update to factor 9 decreased the objective by 9.828e-03.
+An update to factor 20 decreased the objective by 7.698e-04.
+An update to factor 21 decreased the objective by 3.049e-04.
+An update to factor 9 decreased the objective by 9.447e-03.
+An update to factor 20 decreased the objective by 7.796e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 1.206e-02.
+An update to factor 20 decreased the objective by 7.891e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 1.198e-02.
+An update to factor 20 decreased the objective by 7.966e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 1.084e-02.
+An update to factor 20 decreased the objective by 8.028e-04.
+An update to factor 21 decreased the objective by 3.049e-04.
+An update to factor 9 decreased the objective by 1.052e-02.
+An update to factor 20 decreased the objective by 8.084e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 1.053e-02.
+An update to factor 20 decreased the objective by 8.128e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 1.037e-02.
+An update to factor 20 decreased the objective by 8.168e-04.
+An update to factor 21 decreased the objective by 3.844e-02.
+An update to factor 9 decreased the objective by 1.065e-02.
+An update to factor 20 decreased the objective by 8.199e-04.
+An update to factor 21 decreased the objective by 3.815e-02.
+An update to factor 9 decreased the objective by 1.061e-02.
+An update to factor 20 decreased the objective by 8.200e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 9.144e-03.
+An update to factor 20 decreased the objective by 8.193e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 7.514e-03.
+An update to factor 20 decreased the objective by 8.205e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 3.143e-02.
+An update to factor 20 decreased the objective by 8.197e-04.
+An update to factor 21 decreased the objective by 2.992e-04.
+An update to factor 9 decreased the objective by 1.365e-02.
+An update to factor 20 decreased the objective by 8.169e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 6.193e-03.
+An update to factor 20 decreased the objective by 8.139e-04.
+An update to factor 21 decreased the objective by 3.472e-02.
+An update to factor 9 decreased the objective by 6.218e-03.
+An update to factor 20 decreased the objective by 8.096e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 5.948e-03.
+An update to factor 20 decreased the objective by 8.058e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 6.346e-03.
+An update to factor 20 decreased the objective by 8.007e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 6.084e-03.
+An update to factor 20 decreased the objective by 7.952e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 6.218e-03.
+An update to factor 20 decreased the objective by 7.889e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 6.413e-03.
+An update to factor 20 decreased the objective by 7.816e-04.
+An update to factor 21 decreased the objective by 1.021e-02.
+An update to factor 9 decreased the objective by 6.447e-03.
+An update to factor 20 decreased the objective by 7.729e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 6.373e-03.
+An update to factor 20 decreased the objective by 7.663e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 6.805e-03.
+An update to factor 20 decreased the objective by 7.588e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 6.370e-03.
+An update to factor 20 decreased the objective by 7.506e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 6.028e-03.
+An update to factor 20 decreased the objective by 7.419e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 5.754e-03.
+An update to factor 20 decreased the objective by 7.324e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 6.099e-03.
+An update to factor 20 decreased the objective by 7.225e-04.
+An update to factor 21 decreased the objective by 3.443e-02.
+An update to factor 9 decreased the objective by 6.186e-03.
+An update to factor 20 decreased the objective by 7.112e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 5.939e-03.
+An update to factor 20 decreased the objective by 7.001e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 5.868e-03.
+An update to factor 20 decreased the objective by 6.892e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 5.826e-03.
+An update to factor 20 decreased the objective by 6.779e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 5.729e-03.
+An update to factor 20 decreased the objective by 6.662e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 6.058e-03.
+An update to factor 20 decreased the objective by 6.541e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 6.059e-03.
+An update to factor 20 decreased the objective by 6.420e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 5.721e-03.
+An update to factor 20 decreased the objective by 6.300e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 5.645e-03.
+An update to factor 20 decreased the objective by 6.178e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 5.694e-03.
+An update to factor 20 decreased the objective by 6.053e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 5.903e-03.
+An update to factor 20 decreased the objective by 5.924e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 6.062e-03.
+An update to factor 20 decreased the objective by 5.791e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 6.280e-03.
+An update to factor 20 decreased the objective by 5.654e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 7.280e-03.
+An update to factor 20 decreased the objective by 5.527e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 6.912e-03.
+An update to factor 20 decreased the objective by 5.394e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 6.779e-03.
+An update to factor 20 decreased the objective by 5.253e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 7.439e-03.
+An update to factor 20 decreased the objective by 5.103e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 7.411e-03.
+An update to factor 20 decreased the objective by 4.936e-04.
+An update to factor 21 decreased the objective by 3.049e-04.
+An update to factor 9 decreased the objective by 1.231e-02.
+An update to factor 20 decreased the objective by 4.758e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 7.135e-03.
+An update to factor 20 decreased the objective by 4.588e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 6.563e-03.
+An update to factor 20 decreased the objective by 4.422e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 6.716e-03.
+An update to factor 20 decreased the objective by 4.252e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 7 decreased the objective by 6.897e-05.
+An update to factor 9 decreased the objective by 6.671e-03.
+An update to factor 20 decreased the objective by 4.083e-04.
+An update to factor 21 decreased the objective by 3.044e-04.
+An update to factor 9 decreased the objective by 6.567e-03.
+An update to factor 20 decreased the objective by 3.913e-04.
+An update to factor 21 decreased the objective by 3.018e-04.
+An update to factor 7 decreased the objective by 4.434e-04.
+An update to factor 9 decreased the objective by 6.738e-03.
+An update to factor 17 decreased the objective by 7.743e-05.
+An update to factor 19 decreased the objective by 2.682e-07.
+An update to factor 20 decreased the objective by 3.742e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 7.032e-03.
+An update to factor 20 decreased the objective by 3.566e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 7.311e-03.
+An update to factor 17 decreased the objective by 7.221e-05.
+An update to factor 20 decreased the objective by 3.391e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 7.088e-03.
+An update to factor 20 decreased the objective by 3.211e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 6.954e-03.
+An update to factor 17 decreased the objective by 1.213e-05.
+An update to factor 20 decreased the objective by 3.031e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 6.882e-03.
+An update to factor 20 decreased the objective by 2.847e-04.
+An update to factor 21 decreased the objective by 3.023e-04.
+An update to factor 7 decreased the objective by 5.219e-04.
+An update to factor 9 decreased the objective by 6.915e-03.
+An update to factor 19 decreased the objective by 1.751e-07.
+An update to factor 20 decreased the objective by 2.663e-04.
+An update to factor 21 decreased the objective by 3.037e-04.
+An update to factor 9 decreased the objective by 7.119e-03.
+An update to factor 17 decreased the objective by 1.124e-04.
+An update to factor 19 decreased the objective by 1.714e-07.
+An update to factor 20 decreased the objective by 2.477e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 7 decreased the objective by 1.174e-03.
+An update to factor 9 decreased the objective by 7.443e-03.
+An update to factor 20 decreased the objective by 2.289e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 7.426e-03.
+An update to factor 17 decreased the objective by 7.619e-05.
+An update to factor 20 decreased the objective by 2.098e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 9 decreased the objective by 7.442e-03.
+An update to factor 20 decreased the objective by 1.905e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 7.204e-03.
+An update to factor 20 decreased the objective by 1.708e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 7.088e-03.
+An update to factor 17 decreased the objective by 6.415e-05.
+An update to factor 20 decreased the objective by 1.501e-04.
+An update to factor 21 decreased the objective by 3.219e-02.
+An update to factor 9 decreased the objective by 7.187e-03.
+An update to factor 20 decreased the objective by 1.261e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 7.263e-03.
+An update to factor 20 decreased the objective by 1.046e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 7.214e-03.
+An update to factor 17 decreased the objective by 3.174e-05.
+An update to factor 20 decreased the objective by 8.377e-05.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 7.089e-03.
+An update to factor 20 decreased the objective by 6.233e-05.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 7 decreased the objective by 1.262e-05.
+An update to factor 9 decreased the objective by 7.008e-03.
+An update to factor 19 decreased the objective by 7.823e-08.
+An update to factor 20 decreased the objective by 4.091e-05.
+An update to factor 21 decreased the objective by 3.045e-04.
+An update to factor 7 decreased the objective by 5.856e-05.
+An update to factor 9 decreased the objective by 6.971e-03.
+An update to factor 17 decreased the objective by 2.440e-05.
+An update to factor 19 decreased the objective by 6.333e-08.
+An update to factor 20 decreased the objective by 1.913e-05.
+An update to factor 21 decreased the objective by 3.042e-04.
+An update to factor 9 decreased the objective by 6.920e-03.
+An update to factor 21 decreased the objective by 3.004e-04.
+An update to factor 7 decreased the objective by 1.384e-03.
+An update to factor 9 decreased the objective by 6.931e-03.
+An update to factor 19 decreased the objective by 5.513e-07.
+An update to factor 20 decreased the objective by 3.493e-04.
+An update to factor 21 decreased the objective by 3.001e-04.
+An update to factor 7 decreased the objective by 1.770e-03.
+An update to factor 9 decreased the objective by 3.143e-02.
+An update to factor 19 decreased the objective by 6.072e-07.
+An update to factor 20 decreased the objective by 3.598e-04.
+An update to factor 21 decreased the objective by 2.943e-04.
+An update to factor 7 decreased the objective by 1.533e-03.
+An update to factor 9 decreased the objective by 3.566e-02.
+An update to factor 19 decreased the objective by 5.513e-07.
+An update to factor 20 decreased the objective by 3.708e-04.
+An update to factor 21 decreased the objective by 2.835e-04.
+An update to factor 7 decreased the objective by 2.370e-04.
+An update to factor 19 decreased the objective by 3.465e-07.
+An update to factor 20 decreased the objective by 3.807e-04.
+An update to factor 21 decreased the objective by 3.016e-04.
+An update to factor 9 decreased the objective by 1.647e-02.
+An update to factor 19 decreased the objective by 2.123e-07.
+An update to factor 20 decreased the objective by 3.897e-04.
+An update to factor 21 decreased the objective by 2.971e-04.
+An update to factor 7 decreased the objective by 2.821e-03.
+An update to factor 9 decreased the objective by 1.623e-02.
+An update to factor 20 decreased the objective by 3.986e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 7 decreased the objective by 2.755e-03.
+An update to factor 9 decreased the objective by 1.598e-02.
+An update to factor 19 decreased the objective by 5.960e-07.
+An update to factor 20 decreased the objective by 4.073e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 7 decreased the objective by 1.851e-03.
+An update to factor 9 decreased the objective by 1.601e-02.
+An update to factor 19 decreased the objective by 6.706e-07.
+An update to factor 20 decreased the objective by 4.154e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 7 decreased the objective by 6.804e-04.
+An update to factor 9 decreased the objective by 1.603e-02.
+An update to factor 19 decreased the objective by 6.407e-07.
+An update to factor 20 decreased the objective by 4.231e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 1.611e-02.
+An update to factor 19 decreased the objective by 4.247e-07.
+An update to factor 20 decreased the objective by 4.303e-04.
+An update to factor 21 decreased the objective by 3.049e-04.
+An update to factor 7 decreased the objective by 2.460e-03.
+An update to factor 9 decreased the objective by 1.581e-02.
+An update to factor 20 decreased the objective by 4.375e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 7 decreased the objective by 1.158e-03.
+An update to factor 9 decreased the objective by 1.597e-02.
+An update to factor 20 decreased the objective by 4.447e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 1.620e-02.
+An update to factor 19 decreased the objective by 4.098e-08.
+An update to factor 20 decreased the objective by 4.514e-04.
+An update to factor 21 decreased the objective by 3.043e-04.
+An update to factor 7 decreased the objective by 2.263e-03.
+An update to factor 9 decreased the objective by 1.612e-02.
+An update to factor 20 decreased the objective by 4.580e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 7 decreased the objective by 2.461e-03.
+An update to factor 9 decreased the objective by 1.599e-02.
+An update to factor 19 decreased the objective by 1.825e-07.
+An update to factor 20 decreased the objective by 4.645e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 7 decreased the objective by 1.949e-03.
+An update to factor 9 decreased the objective by 1.594e-02.
+An update to factor 19 decreased the objective by 2.570e-07.
+An update to factor 20 decreased the objective by 4.706e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 7 decreased the objective by 1.032e-03.
+An update to factor 9 decreased the objective by 1.605e-02.
+An update to factor 19 decreased the objective by 3.465e-07.
+An update to factor 20 decreased the objective by 4.761e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 7 decreased the objective by 2.702e-05.
+An update to factor 9 decreased the objective by 1.613e-02.
+An update to factor 19 decreased the objective by 4.061e-07.
+An update to factor 20 decreased the objective by 4.813e-04.
+An update to factor 21 decreased the objective by 3.041e-04.
+An update to factor 9 decreased the objective by 1.638e-02.
+An update to factor 19 decreased the objective by 4.470e-07.
+An update to factor 20 decreased the objective by 4.861e-04.
+An update to factor 21 decreased the objective by 2.970e-04.
+An update to factor 7 decreased the objective by 2.668e-03.
+An update to factor 9 decreased the objective by 1.624e-02.
+An update to factor 19 decreased the objective by 4.657e-07.
+An update to factor 20 decreased the objective by 4.909e-04.
+An update to factor 21 decreased the objective by 3.010e-04.
+An update to factor 7 decreased the objective by 2.508e-03.
+An update to factor 9 decreased the objective by 1.624e-02.
+An update to factor 17 decreased the objective by 2.071e-05.
+An update to factor 19 decreased the objective by 4.359e-07.
+An update to factor 20 decreased the objective by 4.954e-04.
+An update to factor 21 decreased the objective by 3.022e-04.
+An update to factor 7 decreased the objective by 1.960e-03.
+An update to factor 9 decreased the objective by 1.624e-02.
+An update to factor 19 decreased the objective by 4.247e-07.
+An update to factor 20 decreased the objective by 4.997e-04.
+An update to factor 21 decreased the objective by 3.008e-04.
+An update to factor 7 decreased the objective by 1.403e-03.
+An update to factor 9 decreased the objective by 1.624e-02.
+An update to factor 19 decreased the objective by 3.949e-07.
+An update to factor 20 decreased the objective by 5.036e-04.
+An update to factor 21 decreased the objective by 3.015e-04.
+An update to factor 7 decreased the objective by 5.751e-04.
+An update to factor 9 decreased the objective by 1.624e-02.
+An update to factor 19 decreased the objective by 3.539e-07.
+An update to factor 20 decreased the objective by 5.073e-04.
+An update to factor 21 decreased the objective by 3.029e-04.
+An update to factor 9 decreased the objective by 1.642e-02.
+An update to factor 19 decreased the objective by 2.943e-07.
+An update to factor 20 decreased the objective by 5.108e-04.
+An update to factor 21 decreased the objective by 3.037e-04.
+An update to factor 7 decreased the objective by 3.031e-03.
+An update to factor 9 decreased the objective by 1.614e-02.
+An update to factor 19 decreased the objective by 2.235e-07.
+An update to factor 20 decreased the objective by 5.146e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 7 decreased the objective by 2.879e-03.
+An update to factor 9 decreased the objective by 1.586e-02.
+An update to factor 19 decreased the objective by 1.453e-07.
+An update to factor 20 decreased the objective by 5.183e-04.
+An update to factor 21 decreased the objective by 3.050e-04.
+An update to factor 7 decreased the objective by 1.952e-03.
+An update to factor 9 decreased the objective by 1.573e-02.
+An update to factor 19 decreased the objective by 1.192e-07.
+An update to factor 20 decreased the objective by 5.214e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 7 decreased the objective by 1.036e-03.
+An update to factor 9 decreased the objective by 1.584e-02.
+An update to factor 19 decreased the objective by 1.304e-07.
+An update to factor 20 decreased the objective by 5.240e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 7 decreased the objective by 3.655e-06.
+An update to factor 9 decreased the objective by 1.591e-02.
+An update to factor 19 decreased the objective by 1.080e-07.
+An update to factor 20 decreased the objective by 5.261e-04.
+An update to factor 21 decreased the objective by 3.051e-04.
+An update to factor 9 decreased the objective by 1.616e-02.
+An update to factor 19 decreased the objective by 4.098e-08.
+An update to factor 20 decreased the objective by 5.280e-04.
+An update to factor 21 decreased the objective by 2.974e-04.
+An update to factor 7 decreased the objective by 2.613e-03.
+An update to factor 9 decreased the objective by 1.633e-02.
+An update to factor 20 decreased the objective by 5.303e-04.
+An update to factor 21 decreased the objective by 2.918e-04.
+An update to factor 7 decreased the objective by 1.993e-03.
+An update to factor 9 decreased the objective by 1.620e-02.
+An update to factor 20 decreased the objective by 5.323e-04.
+An update to factor 21 decreased the objective by 3.145e-02.
+An update to factor 7 decreased the objective by 6.445e-04.
+An update to factor 9 decreased the objective by 1.595e-02.
+An update to factor 17 decreased the objective by 5.545e-05.
+An update to factor 20 decreased the objective by 5.350e-04.
+An update to factor 21 decreased the objective by 3.048e-04.
+An update to factor 9 decreased the objective by 1.622e-02.
+An update to factor 20 decreased the objective by 5.368e-04.
+An update to factor 21 decreased the objective by 2.994e-04.
+An update to factor 7 decreased the objective by 1.747e-03.
+An update to factor 9 decreased the objective by 1.607e-02.
+An update to factor 17 decreased the objective by 4.081e-05.
+An update to factor 20 decreased the objective by 5.380e-04.
+An update to factor 21 decreased the objective by 3.024e-04.
+An update to factor 7 decreased the objective by 1.446e-03.
+An update to factor 9 decreased the objective by 1.602e-02.
+An update to factor 11 decreased the objective by 5.579e-05.
+An update to factor 20 decreased the objective by 5.386e-04.
+An update to factor 21 decreased the objective by 3.000e-04.
+An update to factor 7 decreased the objective by 1.011e-03.
+An update to factor 9 decreased the objective by 1.598e-02.
+An update to factor 17 decreased the objective by 8.409e-05.
+An update to factor 20 decreased the objective by 5.390e-04.
+An update to factor 21 decreased the objective by 3.006e-04.
+An update to factor 7 decreased the objective by 3.452e-04.
+An update to factor 9 decreased the objective by 1.598e-02.
+An update to factor 11 decreased the objective by 1.142e-04.
+An update to factor 20 decreased the objective by 5.390e-04.
+An update to factor 21 decreased the objective by 2.977e-04.
+An update to factor 9 decreased the objective by 1.607e-02.
+An update to factor 20 decreased the objective by 5.389e-04.
+An update to factor 21 decreased the objective by 2.918e-04.
+An update to factor 7 decreased the objective by 1.456e-03.
+An update to factor 9 decreased the objective by 1.597e-02.
+An update to factor 11 decreased the objective by 1.305e-04.
+An update to factor 17 decreased the objective by 2.373e-05.
+An update to factor 20 decreased the objective by 5.387e-04.
+An update to factor 21 decreased the objective by 2.967e-04.
+An update to factor 7 decreased the objective by 9.613e-04.
+An update to factor 9 decreased the objective by 1.595e-02.
+An update to factor 20 decreased the objective by 5.381e-04.
+An update to factor 21 decreased the objective by 2.943e-04.
+An update to factor 7 decreased the objective by 2.610e-04.
+An update to factor 9 decreased the objective by 1.594e-02.
+An update to factor 11 decreased the objective by 1.485e-04.
+An update to factor 17 decreased the objective by 4.707e-05.
+An update to factor 20 decreased the objective by 5.373e-04.
+An update to factor 21 decreased the objective by 2.958e-04.
+An update to factor 9 decreased the objective by 1.599e-02.
+An update to factor 20 decreased the objective by 5.361e-04.
+An update to factor 21 decreased the objective by 2.893e-04.
+An update to factor 7 decreased the objective by 9.826e-04.
+An update to factor 9 decreased the objective by 1.592e-02.
+An update to factor 11 decreased the objective by 1.448e-04.
+An update to factor 20 decreased the objective by 5.350e-04.
+An update to factor 21 decreased the objective by 2.936e-04.
+  --Maximum number of iterations reached!
+  Backfit complete. Objective: 23058535.853 
 Wrapping up...
 Done.</code></pre>
-<pre class="r"><code>tgp_cov_fit_scaled &lt;- ldf(tgp_cov_fit, &#39;i&#39;)</code></pre>
+<pre class="r"><code>tgp_cov_fit_scaled &lt;- ldf(tgp_cov_gb_fit, &#39;i&#39;)</code></pre>
 <p>Note that <code>prior = ebnm_generalized_binary</code> forces <span
-class="math inline">\(L\)</span> to be non-negative. So this generates a
-non-negative covariance matrix decomposition.</p>
+class="math inline">\(L\)</span> and <span
+class="math inline">\(\tilde{L}\)</span> to be non-negative, so this
+generates a non-negative covariance matrix decomposition.</p>
 <p>Step 4: Filter factors that are not similar across both estimates</p>
+<p>As mentioned previously, because <span
+class="math inline">\(S\)</span> is symmetric, we expect <span
+class="math inline">\(\hat{L} \approx \hat{\tilde{L}}\)</span>. To
+enforce this, we filter out any factors which are not highly similar
+across <span class="math inline">\(\hat{L}\)</span> and <span
+class="math inline">\(\hat{\tilde{L}}\)</span>. In particular, for
+column index <span class="math inline">\(k\)</span>, we filter out <span
+class="math inline">\(\hat{\ell}_k\)</span> if the correlation between
+<span class="math inline">\(\hat{\ell}_k\)</span> and <span
+class="math inline">\(\hat{\tilde{\ell}}_k\)</span> is less than
+0.8.</p>
+<pre class="r"><code>print(paste(&#39;Current Number of Factors:&#39;, tgp_cov_fit$n_factors))</code></pre>
+<pre><code>[1] &quot;Current Number of Factors: 11&quot;</code></pre>
 <pre class="r"><code>tgp_cov_fit_scaled_L &lt;- tgp_cov_fit_scaled$L %*% diag(sqrt(tgp_cov_fit_scaled$D))
 tgp_cov_fit_scaled_F &lt;- tgp_cov_fit_scaled$F %*% diag(sqrt(tgp_cov_fit_scaled$D))</code></pre>
 <pre class="r"><code># compute correlations
 factor_correlations &lt;- diag(cor(tgp_cov_fit_scaled_L, tgp_cov_fit_scaled_F))
 hist(factor_correlations, main = &quot;Histogram of Correlations&quot;, xlab = &#39;Correlations&#39;)</code></pre>
-<p><img src="figure/simplified_gbcd_analysis.Rmd/filter_factors-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-filter_factors-1">
-Past versions of filter_factors-1.png
-</button>
-</p>
-<div id="fig-filter_factors-1" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/xxie6/tgp_analysis/blob/1abc1a3a71542274fd5498a89f54d2952a497a19/docs/figure/simplified_gbcd_analysis.Rmd/filter_factors-1.png" target="_blank">1abc1a3</a>
-</td>
-<td>
-Annie Xie
-</td>
-<td>
-2025-10-20
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
+<p><img src="figure/simplified_gbcd_analysis.Rmd/factor_correlations-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>factor_keep &lt;- factor_correlations &gt; 0.8</code></pre>
-<pre class="r"><code>tgp_cov_fit_filtered_scaled_L &lt;- tgp_cov_fit_scaled_L[, factor_keep]</code></pre>
+<pre class="r"><code>tgp_cov_fit_filtered_scaled_L &lt;- tgp_cov_fit_scaled_L[, factor_keep]
+end_time &lt;- Sys.time()
+elapsed_time &lt;- end_time - start_time</code></pre>
+<pre class="r"><code>print(paste(&#39;New Number of Factors:&#39;, sum(factor_keep)))</code></pre>
+<pre><code>[1] &quot;New Number of Factors: 13&quot;</code></pre>
+<pre class="r"><code>print(paste(&#39;Approximate running time of procedure:&#39;, format(elapsed_time)))</code></pre>
+<pre><code>[1] &quot;Approximate running time of procedure: 6.046134 mins&quot;</code></pre>
 </div>
 <div id="visualizing-the-results" class="section level1">
 <h1>Visualizing the Results</h1>
@@ -964,33 +1719,33 @@ colnames(L) &lt;- paste0(&quot;k&quot;,1:k)
 p1 &lt;- structure_plot(L,grouping = tgp_meta$pop,
                      colors = factor_colors,
                      gap = 16,verbose = FALSE) +
-  labs(y = &quot;membership&quot;,title = &quot;GBCD&quot;)</code></pre>
-<pre><code>Running tsne on 77 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 80 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 94 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 70 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 86 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 67 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 47 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 77 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 52 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 89 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 67 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 86 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 90 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 73 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 79 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 86 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 75 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 81 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 77 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 75 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 69 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 76 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 75 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 81 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 88 x 12 matrix.</code></pre>
-<pre><code>Running tsne on 83 x 12 matrix.</code></pre>
+  labs(y = &quot;membership&quot;,title = &quot;Simplified GBCD&quot;)</code></pre>
+<pre><code>Running tsne on 77 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 80 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 94 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 70 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 86 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 67 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 47 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 77 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 52 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 89 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 67 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 86 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 90 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 73 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 79 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 86 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 75 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 81 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 77 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 75 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 69 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 76 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 75 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 81 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 88 x 13 matrix.</code></pre>
+<pre><code>Running tsne on 83 x 13 matrix.</code></pre>
 <pre><code>Warning: `aes_string()` was deprecated in ggplot2 3.0.0.
 ℹ Please use tidy evaluation idioms with `aes()`.
 ℹ See also `vignette(&quot;ggplot2-in-packages&quot;)` for more information.
@@ -1024,6 +1779,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/tgp_analysis/blob/b05d0f409fa23277d38476cb5a94fe16acc03042/docs/figure/simplified_gbcd_analysis.Rmd/structure_plot_L-1.png" target="_blank">b05d0f4</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2025-10-22
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/xxie6/tgp_analysis/blob/1abc1a3a71542274fd5498a89f54d2952a497a19/docs/figure/simplified_gbcd_analysis.Rmd/structure_plot_L-1.png" target="_blank">1abc1a3</a>
@@ -1067,33 +1833,33 @@ our structure plot:</p>
 <pre class="r"><code>p2 &lt;- structure_plot(L[,-1],grouping = tgp_meta$pop,
                      colors = factor_colors[-1],
                      gap = 16,verbose = FALSE) +
-  labs(y = &quot;membership&quot;,title = &quot;GBCD&quot;)</code></pre>
-<pre><code>Running tsne on 82 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 84 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 85 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 65 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 94 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 75 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 45 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 81 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 51 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 80 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 66 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 88 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 90 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 72 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 81 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 79 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 77 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 83 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 85 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 74 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 70 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 74 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 83 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 79 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 76 x 11 matrix.</code></pre>
-<pre><code>Running tsne on 81 x 11 matrix.</code></pre>
+  labs(y = &quot;membership&quot;,title = &quot;Simplified GBCD&quot;)</code></pre>
+<pre><code>Running tsne on 82 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 84 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 85 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 65 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 94 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 75 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 45 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 81 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 51 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 80 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 66 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 88 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 90 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 72 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 81 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 79 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 77 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 83 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 85 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 74 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 70 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 74 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 83 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 79 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 76 x 12 matrix.</code></pre>
+<pre><code>Running tsne on 81 x 12 matrix.</code></pre>
 <pre class="r"><code>p2</code></pre>
 <p><img src="figure/simplified_gbcd_analysis.Rmd/structure_plot_wout_k1-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -1118,6 +1884,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/tgp_analysis/blob/b05d0f409fa23277d38476cb5a94fe16acc03042/docs/figure/simplified_gbcd_analysis.Rmd/structure_plot_wout_k1-1.png" target="_blank">b05d0f4</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2025-10-22
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/xxie6/tgp_analysis/blob/1abc1a3a71542274fd5498a89f54d2952a497a19/docs/figure/simplified_gbcd_analysis.Rmd/structure_plot_wout_k1-1.png" target="_blank">1abc1a3</a>
@@ -1156,31 +1933,38 @@ Annie Xie
 </div>
 </div>
 <p>From this plot, we can interpret the components of our decomposition.
-For example, factors 2, 6, and 7 (“k2”, “k6”, and “k7” in the plot)
-primarily capture the Africa super-population, East Asia
-super-population, and South Asian super-population, respectively. Other
-factors highlight components shared across super-populations. For
-example, factor 4 has some activity in both the East Asia and South Asia
-super-populations.</p>
+For example, factors 2, 7, 8, and 9 (“k2”, “k7”, “k8”, and “k9” in the
+plot) primarily capture the Africa super-population, East Asia
+super-population, South Asian super-population, and Americas
+super-population, respectively. Some factors capture population-specific
+effects. For example, factor 12 corresponds to a unique component for
+the Luhya people of Webuye, Kenya (LWK). Furthermore, factor 10 captures
+a unique component for Japanese in Tokyo, Japan (JPT). This component
+differentiates JPT from the other East Asian populations. Factor 5
+captures shared structure between a smaller subset of the East Asian
+populations – Han Chinese in Southern China (CHS), Han Chinese in
+Beijing, China (CHB), and Japanese in Tokyo, Japan (JPT). Factor 3
+primarily corresponds to the Europe super-population; however we see
+activity in the Americas super-population and some populations in the
+South Asian super-population.</p>
 <p>The results also highlight interesting compositions for particular
-populations. For example, if we take a closer look at Japanese in Tokyo,
-Japan (JPT), we see that most of the components match up with those of
-the other East Asian populations. However, Japan has an additional
-component, factor 9, which differentiates it from the other East Asian
-populations. Another example is Finnish in Finland (FIN). Finland
-contains one component, factor 3, which is shared with other European
-populations. Additionally, it contains a unique component, factor 10.
-Another interesting example is Peruvian from Lima, Peru (PEL). Peru
-contains one component, factor 8, which primarily corresponds to the
-Americas super-population. However, it also contains other components,
-factors 4 and 6, which are shared with South Asian and/or East Asian
-populations. Furthermore, it contains a component, factor 3, that is
-shared with Europe and other populations in the Americas
-super-population.</p>
-<p>Interpretations of others factors: factor 5 implies a shared
-component between two African populations, Mende in Sierra Leone and
-Gambian in Western Division - Mandinka. Factor 12 corresponds to a
-unique component for the Luhya people of Webuye, Kenya.</p>
+populations. For example, let’s take a closer look at Peruvian from
+Lima, Peru (PEL). Peru contains one component, factor 9, which primarily
+corresponds to the Americas super-population. However, it also contains
+other components, factors 4 and 7, which are shared with South Asian
+and/or East Asian populations.</p>
+</div>
+<div id="fit-between-fitted-and-observed-values" class="section level1">
+<h1>Fit between Fitted and Observed Values</h1>
+<pre class="r"><code>fitted.vals &lt;- tcrossprod(L)</code></pre>
+<pre class="r"><code>set.seed(3952)
+diag_idx &lt;- seq(1, prod(dim(S)), length.out = ncol(S))
+off_diag_idx &lt;- setdiff(c(1:prod(dim(S))), diag_idx) 
+samp.vals &lt;- sample(off_diag_idx, size = 10000)</code></pre>
+<pre class="r"><code>ggplot(data = NULL, aes(x = c(as.matrix(S))[samp.vals], y = c(fitted.vals)[samp.vals])) + geom_point() + xlab(&#39;Observed Values&#39;) + ylab(&#39;Fitted Values&#39;) + geom_abline(slope = 1, intercept = 0, color = &#39;red&#39;) + ggtitle(&#39;Fitted vs Observed for Off-Diagonal Entries&#39;)</code></pre>
+<p><img src="figure/simplified_gbcd_analysis.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(data = NULL, aes(x = c(as.matrix(S))[diag_idx], y = c(fitted.vals)[diag_idx])) + geom_point() + xlab(&#39;Observed Values&#39;) + ylab(&#39;Fitted Values&#39;) + geom_abline(slope = 1, intercept = 0, color = &#39;red&#39;) + ggtitle(&#39;Fitted vs Observed for Diagonal Entries&#39;)</code></pre>
+<p><img src="figure/simplified_gbcd_analysis.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="session-info" class="section level1">
 <h1>Session Info</h1>
