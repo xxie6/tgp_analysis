@@ -15,3 +15,4 @@ Analyses:
 * Explanation of [how the data was processed](tgp_data_processing.html)  
 * Analysis of data with [simplified gbcd using flashier](simplified_gbcd_analysis.html)  
 * Analysis of data with [Yusha's gbcd method](gbcd_analysis.html)  
+* Analysis of data with [simplified gbcd with point-exponential prior](simplified_gbcd_ptexp.html)  
