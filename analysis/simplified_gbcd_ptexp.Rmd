@@ -1,0 +1,206 @@
+---
+title: "simplified_gbcd_ptexp"
+author: "Annie Xie"
+date: "2025-10-30"
+output: 
+  workflowr::wflow_html:
+    code_folding: hide
+editor_options:
+  chunk_output_type: console
+---
+
+The aim of this vignette is to illustrate how to use `flashier` to obtain a decomposition of the 1000 Genomes Phase 3 dataset.
+
+We begin by loading the necessary packages. We also set the seed so that results can be fully reproduced.    
+```{r load_packages, message = FALSE, warning = FALSE}
+library(flashier)
+library(ashr)
+library(ebnm)
+library(Matrix)
+library(pheatmap)
+library(ggplot2)
+library(fastTopics)
+library(cowplot)
+set.seed(3)
+```
+
+```{r}
+source('code/visualization_functions.R')
+```
+
+# Preparing the Data
+In this vignette, we will be working with the 1000 Genomes Project Phase 3 dataset. We started with the ADMIXTURE analysis dataset from the flagship paper, [1000 Genomes Project Consortium et al. 2015][tgp_phase3_paper]; the data can be found [here][tgp_admixture_data]. This dataset contains genotype information for 2,504 individuals from 26 populations and 193,634 SNPs. The paper states that in the preparation of this dataset, variants with a minor allele frequency of less than 0.05 were filtered out and the genome was thinned to decrease the effect of linkage disequilibrium.
+
+Furthermore, we filtered out SNPs for which we had no ancestral allele information; ancestral allele information was obtained from the "2016-05-05 primary release (build 37, 2504 samples)" files downloaded from [here][ancestral_allele_info]. This reduced the number of SNPs to 185,116. We then re-coded the data matrix to be counts of derived alleles. From the individual by SNP data matrix $X$, we computed the scaled Gram matrix, $S = \frac{1}{p}XX'$ where $p$ is the number of SNPs.
+
+We load in the scaled Gram matrix.
+```{r load_data}
+S <- readRDS('data/tgp_cov_matrix.rds')
+```
+
+We also load in the meta data which contains population information for each sample.
+```{r load_meta}
+tgp_meta <- readRDS('data/tgp_meta.rds')
+```
+
+# Using Flashier to fit GBCD
+Now, we use the R package `flashier` to apply a simplified version of GBCD on the 1000 Genomes Project data. This is broken down into several steps.
+
+Step 1: Fit a point-Laplace EBMF fit to the scaled Gram matrix  
+
+First, we use `flashier` to fit $S \approx L \tilde{L}'$ with point-Laplace priors over the columns of $L$ and $\tilde{L}$. Note that because $S$ is symmetric, we expect $L \approx \tilde{L}$. 
+
+```{r pt_laplace_fit}
+start_time <- Sys.time()
+tgp_cov_fit <- flash_init(data = S) |>
+  flash_set_verbose(2) |>
+  flash_greedy(Kmax = 11, ebnm_fn = ebnm::ebnm_point_laplace) |>
+  flash_backfit(extrapolate = TRUE, warmstart = TRUE, maxiter = 500)
+```
+
+Note that `Kmax = 11` forces this initialization step to fit no more than 11 factors. However, it is possible for the final fit to have more than 11 factors (The number of factors in the final fit will be no more than 2\*`Kmax`). It is recommended to set `Kmax` to a larger value rather than a smaller one.
+
+Step 2: Split the factors into positive and negative components  
+
+Now, we split the factors from the flash fit into its positive and negative components. In particular, we construct the matrices
+$$\hat{L}_{nonneg} = \big[ \max\{\hat{L}, 0_{N \times K}\}, \ \max\{-\hat{L}, 0_{N \times K} \} \big]$$
+
+$$\hat{\tilde{L}}_{nonneg} = \big[ \max\{\hat{\tilde{L}}, 0_{N \times K}\}, \ \max\{-\hat{\tilde{L}}, 0_{N \times K} \} \big]$$
+
+```{r split_function}
+split_pt_laplace_estimates <- function(cov_fit){
+  # S is the scaled Gram matrix
+  # cov_fit is a flash object
+  
+  LL <- cov_fit$L_pm
+  FF <- cov_fit$F_pm
+  
+# split into positive and negative components
+  LL <- cbind(pmax(LL, 0), pmax(-LL, 0))
+  FF <- cbind(pmax(FF, 0), pmax(-FF, 0))
+  
+  # remove columns of zeros
+  LL.idx.nonzero <- apply(LL, 2, function(x){return(sum(x^2))}) > 10^(-10)
+  FF.idx.nonzero <- apply(FF, 2, function(x){return(sum(x^2))}) > 10^(-10)
+  LL <- LL[, LL.idx.nonzero]
+  FF <- FF[, FF.idx.nonzero]
+  
+  # refit weights by least squares
+  # n <- nrow(S)
+  # lft_vec <- matrix(rep(0, ncol(LL)*n*n), ncol = ncol(LL))
+  # for (i in 1:ncol(LL)){
+  #   lft_vec[,i] <- c(LL[,i]%*%t(FF[,i]))
+  # }
+  # 
+  # nnlm_fit <- NNLM::nnlm(lft_vec, as.matrix(c(S), ncol = 1), alpha = c(0,0,0))
+  # 
+  # indices_keep <- (nnlm_fit$coefficients > 0)
+  # LL_scaled <- LL[,indices_keep] %*% diag(sqrt(nnlm_fit$coefficients[indices_keep]))
+  # FF_scaled <- FF[,indices_keep] %*% diag(sqrt(nnlm_fit$coefficients[indices_keep]))
+  return(list(LL, FF))
+}
+```
+
+```{r pt_laplace_split_init}
+pt_laplace_split_initialization <- split_pt_laplace_estimates(tgp_cov_fit)
+```
+
+```{r}
+diag(cor(pt_laplace_split_initialization[[1]], pt_laplace_split_initialization[[2]]))
+```
+
+Step 3: Fit a point-exponential EBMF fit to the scaled Gram matrix   
+
+Now, we use `flashier` to fit $S \approx L \tilde{L}'$ with point-exponential priors over the columns of $L$ and $\tilde{L}$. We initialize this fit with $\hat{L}_{nonneg}$ and $\hat{\tilde{L}}_{nonneg}$, constructed in the previous step.
+
+```{r gb_fit}
+tgp_cov_pexp_fit <- flash_init(data = S) |>
+  flash_set_verbose(2) |>
+  flash_factors_init(pt_laplace_split_initialization, ebnm_fn = ebnm::ebnm_point_exponential) |>
+  flash_backfit(extrapolate = FALSE, warmstart = TRUE, maxiter = 200) |> flash_nullcheck()
+```
+
+```{r scaled_gb_fit}
+tgp_cov_pexp_fit_scaled <- ldf(tgp_cov_pexp_fit, 'i')
+```
+
+Note that `ebnm_fn = ebnm::ebnm_point_exponential` forces $L$ and $\tilde{L}$ to be non-negative, so this generates a non-negative covariance matrix decomposition.    
+
+Step 4: Filter factors that are not similar across both estimates  
+
+As mentioned previously, because $S$ is symmetric, we expect $\hat{L} \approx \hat{\tilde{L}}$. To enforce this, we filter out any factors which are not highly similar across $\hat{L}$ and $\hat{\tilde{L}}$. In particular, for column index $k$, we filter out $\hat{\ell}_k$ if the correlation between $\hat{\ell}_k$ and $\hat{\tilde{\ell}}_k$ is less than 0.8.
+
+```{r current_num_of_fac}
+print(paste('Current Number of Factors:', tgp_cov_pexp_fit$n_factors))
+```
+
+```{r scaled_loadings}
+tgp_cov_pexp_fit_scaled_L <- tgp_cov_pexp_fit_scaled$L %*% diag(sqrt(tgp_cov_pexp_fit_scaled$D))
+tgp_cov_pexp_fit_scaled_F <- tgp_cov_pexp_fit_scaled$F %*% diag(sqrt(tgp_cov_pexp_fit_scaled$D))
+```
+
+```{r factor_correlations}
+# compute correlations
+factor_correlations <- diag(cor(tgp_cov_pexp_fit_scaled_L, tgp_cov_pexp_fit_scaled_F))
+hist(factor_correlations, main = "Histogram of Correlations", xlab = 'Correlations')
+```
+
+```{r filter_factors}
+factor_keep <- factor_correlations > 0.8
+```
+
+```{r final_loadings_estimate}
+tgp_cov_pexp_fit_filtered_scaled_L <- tgp_cov_pexp_fit_scaled_L[, factor_keep]
+end_time <- Sys.time()
+elapsed_time <- end_time - start_time
+```
+
+```{r new_num_of_fac}
+print(paste('New Number of Factors:', sum(factor_keep)))
+```
+
+```{r}
+print(paste('Approximate Running Time of Procedure:', format(elapsed_time)))
+```
+
+# Visualizing the Results
+
+A useful plot type for visualizing non-negative loadings matrices is the "structure plot" -- a stacked bar plot in which each component is represented as a bar of a different color, and the bar heights are given by the loadings on each component. 
+
+This is the structure plot for the loadings estimate from gbcd:
+```{r structure_plot_L}
+
+factor_colors <- Polychrome::kelly.colors(ncol(tgp_cov_pexp_fit_filtered_scaled_L)+1)[-1]
+
+L <- tgp_cov_pexp_fit_filtered_scaled_L
+k <- ncol(L)
+colnames(L) <- paste0("k",1:k)
+p1 <- structure_plot(L,grouping = tgp_meta$pop,
+                     colors = factor_colors,
+                     gap = 16,verbose = FALSE) +
+  labs(y = "membership",title = "Simplified GBCD")
+p1
+```
+
+Factor 1 (“k1” in the legend) appears to be a "baseline" factor. To focus on differences between samples, we can remove first factor from our structure plot:
+
+```{r structure_plot_wout_k1}
+p2 <- structure_plot(L[,-1],grouping = tgp_meta$pop,
+                     colors = factor_colors[-1],
+                     gap = 16,verbose = FALSE) +
+  labs(y = "membership",title = "Simplified GBCD")
+p2
+```
+
+# Session Info
+This is the version of R and the packages that were used to generate these results.
+
+```{r session-info}
+sessionInfo()
+```
+
+[tgp_phase3_paper]: https://www.nature.com/articles/nature15393
+
+[tgp_admixture_data]: https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/admixture_files/
+
+[ancestral_allele_info]: https://www.cog-genomics.org/plink/2.0/resources#phase3_1kg
