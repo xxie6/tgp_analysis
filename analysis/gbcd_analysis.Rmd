@@ -49,23 +49,25 @@ summary(tgp_meta$super_pop)
 
 # Applying GBCD
 
-Now, we call `gbcd` to fit a decomposition to the 1000 Genomes Project data. Below is our call to `fit_gbcd`:
+Now, we call `gbcd` to fit a decomposition to the 1000 Genomes Project data. GBCD finds $L$ and $\tilde{L}$ such that $\frac{1}{p}YY' \approx L \tilde{L}'$, where $Y$ is the sample-by-SNP data matrix.
+
+Below is our call to `fit_gbcd`:
 ```{r apply_gbcd, eval = FALSE}
 gbcd_1kg_fit <- fit_gbcd(Y, Kmax = 11,
                   prior = ebnm::ebnm_generalized_binary,
-                  maxiter1 = 100, maxiter2 = 100, maxiter3 =
-                  100)
+                  maxiter1 = 500, maxiter2 = 200, maxiter3 =
+                  500)
 ```
 
 A few notes on the other arguments of this `fit_gbcd` call:   
    
-* `prior = ebnm_generalized_binary` forces $L$ to be non-negative. So this generates a non-negative covariance matrix decomposition.    
+* `prior = ebnm_generalized_binary` forces $L$ and $\tilde{L}$ to be non-negative. So this generates a non-negative covariance matrix decomposition.    
 
-* `Kmax = 6` forces the initialization step of GBCD to fit no more than 6 factors. However, it is possible for the final GBCD fit to have more than 6 factors (The number of factors in the GBCD fit will be no more than 2\*`Kmax`). It is recommended to set `Kmax` to a larger value rather than a smaller one.
+* `Kmax = 11` forces the initialization step of GBCD to fit no more than 11 factors. However, it is possible for the final GBCD fit to have more than 11 factors (The number of factors in the GBCD fit will be no more than 2\*`Kmax`). It is recommended to set `Kmax` to a larger value rather than a smaller one.
 
-We also want to note that this `fit_gbcd` call takes about 1 hour to complete. Therefore, we load in previously saved results.
+We also want to note that this `fit_gbcd` call takes about 5-6 hours to complete. (Note: I think it is the semi-NMF step that takes a long time. If you are just interested in $L$, you could theoretically skip this step. However, that is not an option in the current `gbcd` framework.) Therefore, we load in previously saved results.
 ```{r load_gbcd_results}
-L <- readRDS('data/gbcd_cov_scaling_gb_k11.rds')
+L <- readRDS('data/gbcd_cov_scaling_longer_backfit_gb_k11.rds')
 ```
 
 # Visualizing the Results
@@ -98,9 +100,11 @@ p2
 
 Using these plots, we can interpret the components of our decomposition. First, factor 1 ("k1" in the plot) appears to be a baseline factor. Some of the factors seem to capture super-population effects. For example, factors 2 and 4 primarily capture the Africa and East Asia super-populations, respectively. Other factors highlight components shared across super-populations. For example, factor 5 has activity in the East Asia and South Asia super-populations, as well as some populations in the Europe and Americas super-populations. Another example is factor 3. Factor 3 has the highest levels of activity in the Europe super-population with lower levels in the Americas and South Asia super-populations.
 
-The results also highlight interesting compositions for particular populations. For example, there are some population-specific factors. If we take a closer look at Japanese in Tokyo, Japan (JPT), we see that most of the components match up with those of the other East Asian populations. However, JPT has an additional component, factor 10, which differentiates it from the other East Asian populations. Similarly, Luhya in Webuye, Kenya (LWK) has a lot of overlap with other populations in the Africa super-population, but has an additional factor, factor 12, which differentiates it from the others.
+Other factors capture shared structures for small subsets of populations. For example, factor 13 captures a shared effect between two African populations, Mende in Sierra Leone and Gambian in Western Division - Mandinka. Furthermore, factor 10 captures a shared effect between Chinese Dai in Xishuangbanna, China (CDX), Kinh in Ho Chi Minh City, Vietnam (KHV), and a subset of Han Chinese in Southern China (CHS). 
 
-Finland (FIN) shows an interesting combination of the shared factors. Finland contains one component, factor 3, which is primarily shared with other European populations. Additionally, it contains one component, factor 5, which is shared with primarily the East and South Asia super-population. Finland also has one component, factor 9, which is shared with the Americas super-population and some populations in the Europe super-population.
+The results also highlight interesting compositions for particular populations. For example, there are some population-specific factors. If we take a closer look at Japanese in Tokyo, Japan (JPT), we see that most of the components match up with those of the other East Asian populations. However, JPT has an additional component, factor 12, which differentiates it from the other East Asian populations. Similarly, Luhya in Webuye, Kenya (LWK) has a lot of overlap with other populations in the Africa super-population, but has an additional factor, factor 14, which differentiates it. 
+
+Finland (FIN) shows an interesting combination of the shared factors. Finland contains one component, factor 3, which is primarily shared with other European populations. Additionally, it contains one component, factor 5, which is shared with primarily the East and South Asia super-populations. Peruvian from Lima, Peru (PEL) is another interesting example. It contains factor 7, which corresponds to the Americas super-population. Similar to Finland, it also contains factor 5, capturing similarity to the East and South Asia super-populations.
 
 # Session Info
 This is the version of R and the packages that were used to generate these results.
